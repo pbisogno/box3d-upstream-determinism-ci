@@ -1,3 +1,6 @@
+#if !defined(_WIN32) && !defined(_POSIX_C_SOURCE)
+#define _POSIX_C_SOURCE 200809L
+#endif
 // SPDX-License-Identifier: MIT
 // Generic public recording experiments; scene helpers derive from upstream
 // test/test_recording.c through the unchanged public stress-replay example.
@@ -5,6 +8,19 @@
 #include "stress-replay.c"
 #undef main
 #include "physics_world.h"
+#if defined(_WIN32)
+#include <io.h>
+#define rb_fileno _fileno
+#define rb_dup _dup
+#define rb_dup2 _dup2
+#define rb_close _close
+#else
+#include <unistd.h>
+#define rb_fileno fileno
+#define rb_dup dup
+#define rb_dup2 dup2
+#define rb_close close
+#endif
 enum { RB_HORIZON=2048, RB_CHECKPOINTS=3, RB_CYCLES=8 };
 typedef struct { Scene scene; b3JointId joint; int bodyReuse,shapeReuse,jointReuse,stale,creates,destroys; } RBWorld;
 typedef struct { int begin,end,hit,move,sleep,joint; } RBEvents;
@@ -211,6 +227,23 @@ static int rb_trial(int checkpoint,int workers,const Trace* reference,RBCheckpoi
     if (recording) b3DestroyRecording(recording);
     return ok;
 }
+static int rb_capture_upstream_stdout(int* saved)
+{
+    *saved=-1;
+    if (fflush(stdout)!=0) return 0;
+    int descriptor=rb_dup(rb_fileno(stdout));
+    if (descriptor<0) return 0;
+    if (rb_dup2(rb_fileno(stderr),rb_fileno(stdout))<0) { rb_close(descriptor); return 0; }
+    *saved=descriptor; return 1;
+}
+static int rb_restore_stdout(int saved)
+{
+    int ok=fflush(stdout)==0;
+    if (rb_dup2(saved,rb_fileno(stdout))<0) ok=0;
+    if (rb_close(saved)!=0) ok=0;
+    if (fflush(stdout)!=0) ok=0;
+    return ok;
+}
 static void rb_log_stderr(const char* message)
 {
     // Preserve the upstream default prefix/message/newline; only change stream.
@@ -230,6 +263,8 @@ int main(int argc,char** argv)
     }
     if (!*profile || strlen(profile)>120) goto usage;
     for (const char* q=profile;*q;++q) if (!((*q>='a'&&*q<='z')||(*q>='A'&&*q<='Z')||(*q>='0'&&*q<='9')||strchr("_./:+-",*q))) goto usage;
+    int saved_stdout=-1;
+    if (!rb_capture_upstream_stdout(&saved_stdout)) { fputs("cannot redirect upstream stdout\n",stderr); return 5; }
     Trace* reference=(Trace*)calloc(RB_HORIZON+1,sizeof(Trace)); RBWorld baseline={0}; RBEvents events={0};
     RBCheckpoint checkpoints[RB_CHECKPOINTS]={{0}}; int checkpointTicks[3]={-1,-1,1281};
     int ok=reference && rb_make(&baseline,workers),updates=0,width=0,widthGate=1,warmTicks=0,sleepTicks=0;
@@ -258,6 +293,7 @@ int main(int argc,char** argv)
         if (!rb_trial(checkpointTicks[i],workers,reference,checkpoints+i)) trialGate=0;
     } else trialGate=0;
     ok=ok && trialGate;
+    if (!rb_restore_stdout(saved_stdout)) { fputs("cannot restore JSON stdout\n",stderr); free(reference); return 5; }
     printf("{\"schema\":\"box3d-frontier-v1\",\"frontier\":\"rollback\",\"profile\":\"%s\",\"case\":\"mixed\",\"status\":\"%s\",\"workers_requested\":%d,\"simd_width_actual\":%d,\"horizon\":%d,\"updates\":%d,\"gates\":{\"coverage\":%s,\"finite\":%s,\"simd_stable\":%s,\"restore_and_controls\":%s},\"natural_sleep_ticks\":%d,\"warm_contact_ticks\":%d,\"events\":{\"contact_begin\":%d,\"contact_end\":%d,\"contact_hit\":%d,\"body_move\":%d,\"fell_asleep\":%d,\"joint_threshold\":%d,\"sensor_coverage\":false},\"reused_body_slots\":%d,\"reused_shape_slots\":%d,\"reused_joint_slots\":%d,\"stale_handles_rejected\":%d,\"checkpoints\":[",
         profile,ok?"complete":"gate_failed",workers,width,RB_HORIZON,updates,coverage?"true":"false",nonfiniteTick<0?"true":"false",widthGate?"true":"false",trialGate?"true":"false",
         sleepTicks,warmTicks,events.begin,events.end,events.hit,events.move,events.sleep,events.joint,baseline.bodyReuse,baseline.shapeReuse,baseline.jointReuse,baseline.stale);
