@@ -222,7 +222,8 @@ int main(int argc,char** argv)
         else if (!strcmp(argv[i],"--case")) { if (strcmp(argv[i+1],"all") && strcmp(argv[i+1],"mixed")) goto usage; }
         else goto usage;
     }
-    for (const char* q=profile;*q;++q) if (!((*q>='a'&&*q<='z')||(*q>='A'&&*q<='Z')||(*q>='0'&&*q<='9')||*q=='_'||*q=='-')) goto usage;
+    if (!*profile || strlen(profile)>120) goto usage;
+    for (const char* q=profile;*q;++q) if (!((*q>='a'&&*q<='z')||(*q>='A'&&*q<='Z')||(*q>='0'&&*q<='9')||strchr("_./:+-",*q))) goto usage;
     Trace* reference=(Trace*)calloc(RB_HORIZON+1,sizeof(Trace)); RBWorld baseline={0}; RBEvents events={0};
     RBCheckpoint checkpoints[RB_CHECKPOINTS]={{0}}; int checkpointTicks[3]={-1,-1,1281};
     int ok=reference && rb_make(&baseline,workers),updates=0,width=0,widthGate=1,warmTicks=0,sleepTicks=0;

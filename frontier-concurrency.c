@@ -293,7 +293,8 @@ int main(int argc,char** argv)
         else if (!strcmp(argv[i],"--case")) { if (!strcmp(argv[i+1],"all")) kind=0; else if (!strcmp(argv[i+1],"islands")) kind=10; else if (!strcmp(argv[i+1],"dense")) kind=11; else goto usage; }
         else if (!strcmp(argv[i],"--trace")) path=argv[i+1]; else goto usage;
     }
-    for (const char* q=profile;*q;++q) if (!((*q>='a'&&*q<='z')||(*q>='A'&&*q<='Z')||(*q>='0'&&*q<='9')||*q=='_'||*q=='-')) goto usage;
+    if (!*profile || strlen(profile)>120) goto usage;
+    for (const char* q=profile;*q;++q) if (!((*q>='a'&&*q<='z')||(*q>='A'&&*q<='Z')||(*q>='0'&&*q<='9')||strchr("_./:+-",*q))) goto usage;
     FILE* trace=path?fopen(path,"wb"):NULL; if (path&&!trace) { fputs("cannot open trace output\n",stderr); return 5; }
     int ok=1;
     if (!kind || kind==10) if (!cn_run(10,workers,profile,trace)) ok=0;
