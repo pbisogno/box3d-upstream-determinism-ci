@@ -190,6 +190,29 @@ static void cache_retention(const Scene* scene,const Selection* selected,Interve
         }
     }
 }
+typedef struct {
+    int sleepTick,wakeTick,preSleep[3],sleepCalls[3],sleepingBodies[3],wakeCalls[3],awakeBodies[3],preserved;
+} BalancedCycle;
+static int set_scene_awake(const Scene* scene,int awake,int* calls,int* observed)
+{
+    *calls=*observed=0;
+    for (int i=1;i<ROLES;++i) if (b3Body_IsValid(scene->body[i])) {
+        b3Body_SetAwake(scene->body[i],awake!=0); ++*calls;
+    }
+    for (int i=1;i<ROLES;++i) if (b3Body_IsValid(scene->body[i]) &&
+        b3Body_IsAwake(scene->body[i])==(awake!=0)) ++*observed;
+    return *calls>0 && *calls==*observed;
+}
+static int same_cache_targets(const Selection* before,const Selection* after)
+{
+    if (!before->valid || !after->valid || before->count<=0 || before->count!=after->count) return 0;
+    for (int i=0;i<before->count;++i) {
+        const Target* a=before->targets+i; const Target* b=after->targets+i;
+        if (a->contactIndex!=b->contactIndex || a->manifoldIndex!=b->manifoldIndex ||
+            a->generation!=b->generation || a->before!=b->before || a->storage!=b->storage) return 0;
+    }
+    return 1;
+}
 static void print_finding(const Finding* f)
 {
     char a[24]="null",b[24]="null";
@@ -204,18 +227,37 @@ static void print_effects(const Effects* e)
     print_finding(&e->first); fputs(",\"first_nonzero_or_discrete\":",stdout); print_finding(&e->firstNonzero);
     fputs(",\"first_body_nonzero_or_discrete\":",stdout); print_finding(&e->firstBodyNonzero); putchar('}');
 }
-static int run_pair(int kind,int scope,int tick,int horizon,int workers)
+static int observe_causal(const Scene* scenes,int index,int tick,Trace* out,int widths[3],int* gate)
+{
+    const Scene* scene=scenes+index;
+    const b3World* measuredWorld=b3GetWorldFromId(scene->world);
+    int width=measuredWorld?measuredWorld->simdWidth:0;
+    if (width!=4 && width!=8) *gate=0;
+    if (widths[index]==0) widths[index]=width;
+    else if (widths[index]!=width) *gate=0;
+    for (int i=0;i<3;++i) if (widths[i]!=0 && widths[i]!=width) *gate=0;
+    return observe(scene->world,scene->body,tick,out);
+}
+static int run_pair(int kind,int scope,int tick,int horizon,int workers,int sleepContext)
 {
     Scene scenes[3]={{0}}; Stats stats[3]={{0}}; Trace traces[3]; Selection selected[3]={{0}};
     Intervention injection={0}; Effects control,prefix,immediate,future;
     init_effects(&control); init_effects(&prefix); init_effects(&immediate); init_effects(&future);
     int ok=1,workerGate=1,warmGate=1,steps=0,controlCount=0,prefixCount=0,futureCount=0,activation=0,readback=0,onlySign=0;
-    int actualWorkers[3]={0};
+    int actualWorkers[3]={0},actualSimd[3]={0},simdGate=1,sleepGate=!sleepContext,wakeGate=!sleepContext;
+    BalancedCycle cycle={0}; cycle.sleepTick=cycle.wakeTick=-1;
+    cycle.preserved=1;
     for (int i=0;i<3;++i) if (!make_scene(scenes+i,kind,workers,stats+i)) ok=0;
     for (int now=0;ok && now<=horizon;++now) {
         if (now>0) {
             for (int i=0;i<3;++i) if (!commands(scenes+i,now,stats+i)) ok=0;
             if (!ok) break;
+            if (now==tick+1 && sleepContext) {
+                cycle.wakeTick=now; wakeGate=1;
+                for (int i=0;i<3;++i) if (!set_scene_awake(scenes+i,1,cycle.wakeCalls+i,cycle.awakeBodies+i)) wakeGate=0;
+                if (cycle.wakeCalls[0]!=cycle.wakeCalls[1] || cycle.wakeCalls[0]!=cycle.wakeCalls[2] ||
+                    cycle.wakeCalls[0]!=cycle.sleepCalls[0]) wakeGate=0;
+            }
             if (now==tick+1 && scope!=3) cache_retention(scenes+2,selected+2,&injection,1);
             for (int i=0;i<3;++i) b3World_Step(scenes[i].world,1.0f/60.0f,4);
             steps=now;
@@ -225,14 +267,38 @@ static int run_pair(int kind,int scope,int tick,int horizon,int workers)
             actualWorkers[i]=b3World_GetWorkerCount(scenes[i].world);
             if (actualWorkers[i]!=workers) workerGate=0;
             if (!b3World_IsWarmStartingEnabled(scenes[i].world)) warmGate=0;
-            if (!observe(scenes[i].world,scenes[i].body,now,traces+i)) ok=0;
+            if (!observe_causal(scenes,i,now,traces+i,actualSimd,&simdGate)) ok=0;
         }
+        if (actualSimd[0]!=actualSimd[1] || actualSimd[0]!=actualSimd[2]) simdGate=0;
         if (!ok) break;
         ++controlCount; if (!compare_observations(traces,traces+1,now,&control)) ok=0;
         if (now<=tick) { ++prefixCount; if (!compare_observations(traces,traces+2,now,&prefix)) ok=0; }
         else { ++futureCount; compare_observations(traces,traces+2,now,&future); }
         if (!ok) break;
         if (now==tick) {
+            if (sleepContext) {
+                Selection beforeSleep[3];
+                for (int i=0;i<3;++i) {
+                    beforeSleep[i]=select_cache(scenes+i,scope==1?1:2);
+                    cycle.preSleep[i]=beforeSleep[i].count;
+                }
+                sleepGate=selection_equal(beforeSleep,beforeSleep+1) && selection_equal(beforeSleep,beforeSleep+2);
+                cycle.sleepTick=now;
+                for (int i=0;i<3;++i) if (!set_scene_awake(scenes+i,0,cycle.sleepCalls+i,cycle.sleepingBodies+i)) sleepGate=0;
+                if (cycle.sleepCalls[0]!=cycle.sleepCalls[1] || cycle.sleepCalls[0]!=cycle.sleepCalls[2]) sleepGate=0;
+                // Observe the balanced sleep transition before the experimental write.
+                for (int i=0;i<3;++i) if (!observe_causal(scenes,i,now,traces+i,actualSimd,&simdGate)) ok=0;
+                if (!ok) break;
+                ++controlCount; if (!compare_observations(traces,traces+1,now,&control)) ok=0;
+                ++prefixCount; if (!compare_observations(traces,traces+2,now,&prefix)) ok=0;
+                for (int i=0;i<3;++i) {
+                    selected[i]=select_cache(scenes+i,scope==1?1:2);
+                    if (!same_cache_targets(beforeSleep+i,selected+i)) cycle.preserved=0;
+                    if (selected[i].count<=0 || selected[i].sleeping!=selected[i].count || selected[i].awake!=0) sleepGate=0;
+                }
+                sleepGate=sleepGate && cycle.preserved;
+                if (!ok || !sleepGate) { ok=0; break; }
+            }
             for (int i=0;i<3;++i) selected[i]=select_cache(scenes+i,scope==1?1:2);
             ok=selection_equal(selected,selected+1) && selection_equal(selected,selected+2);
             injection.warm=b3World_IsWarmStartingEnabled(scenes[2].world);
@@ -250,7 +316,7 @@ static int run_pair(int kind,int scope,int tick,int horizon,int workers)
             }
             if (!ok) break;
             // Repeat ALL three observations equally, including the fresh ray.
-            for (int i=0;i<3;++i) if (!observe(scenes[i].world,scenes[i].body,now,traces+i)) ok=0;
+            for (int i=0;i<3;++i) if (!observe_causal(scenes,i,now,traces+i,actualSimd,&simdGate)) ok=0;
             if (!ok) break;
             ++controlCount; if (!compare_observations(traces,traces+1,now,&control)) ok=0;
             compare_observations(traces,traces+2,now,&immediate);
@@ -265,26 +331,31 @@ static int run_pair(int kind,int scope,int tick,int horizon,int workers)
             if (!readback) ok=0;
         }
     }
-    int counts=controlCount==horizon+2 && prefixCount==tick+1 && futureCount==horizon-tick && steps==horizon;
+    int counts=controlCount==horizon+2+sleepContext && prefixCount==tick+1+sleepContext && futureCount==horizon-tick && steps==horizon;
     int sensitive=scope!=3 || injection.impulseReadback && future.bodyNonzero>0;
     int eligible=scope==3 || injection.nextRetained==injection.flipped && injection.nextAwake==injection.flipped && injection.afterRetained==injection.flipped && injection.nextWarm;
-    ok=ok && workerGate && warmGate && control.differingTicks==0 && prefix.differingTicks==0 &&
-        activation && readback && onlySign && counts && sensitive && eligible && nonfiniteTick<0;
+    ok=ok && workerGate && warmGate && simdGate && control.differingTicks==0 && prefix.differingTicks==0 &&
+        activation && readback && onlySign && counts && sensitive && eligible && sleepGate && wakeGate && nonfiniteTick<0;
     const char* effect=!ok?"not_established":(future.nonzero || future.integer || future.structure)?"nonzero_or_discrete_effect":
         (future.zero?"signed_zero_only":"no_selected_effect");
     const char* scopes[4]={"unknown","single","all","impulse"};
-    printf("{\"schema\":\"box3d-causal-pair-v1\",\"status\":\"%s\",\"effect\":\"%s\",\"case\":\"%s\",\"scope\":\"%s\",\"intervention_kind\":\"%s\",\"intervention_tick\":%d,\"horizon\":%d,\"steps_completed\":%d,\"workers_requested\":%d,\"workers_actual\":[%d,%d,%d],\"control_states_compared\":%d,\"pre_intervention_states_compared\":%d,\"future_states_compared\":%d,\"gate_applicability\":{\"only_zero_sign_changed\":%s,\"solver_eligibility\":%s,\"positive_control_sensitive\":%s},\"gates\":{\"workers\":%s,\"warmstarting\":%s,\"finite_observations\":%s,\"sham_exact\":%s,\"prefix_exact\":%s,\"activation\":%s,\"readback\":%s,\"only_zero_sign_changed\":%s,\"expected_comparison_counts\":%s,\"solver_eligibility\":%s,\"positive_control_sensitive\":%s},\"intervention\":{\"baseline_eligible\":%d,\"sham_eligible\":%d,\"flip_eligible\":%d,\"flipped\":%d,\"confirmed\":%d,\"object_bytes_verified\":%d,\"positive_before\":%d,\"negative_before\":%d,\"awake_graph\":%d,\"sleeping\":%d,\"other\":%d,\"target_field_tag\":%u,\"public_alias_verified\":%s,\"warmstarting\":%s,\"next_step_retained\":%d,\"next_step_awake_graph\":%d,\"next_step_warmstarting\":%s,\"after_step_retained\":%d,\"after_step_sign_retained\":%d,\"impulse_readback_nonzero\":%s},\"immediate\":",
-        ok?"complete":"gate_failed",effect,cases[kind],scopes[scope],scope==3?"positive_control":"cache_zero_sign",tick,horizon,steps,
-        workers,actualWorkers[0],actualWorkers[1],actualWorkers[2],controlCount,prefixCount,futureCount,
-        scope!=3?"true":"false",scope!=3?"true":"false",scope==3?"true":"false",
+    printf("{\"schema\":\"box3d-causal-pair-v2\",\"status\":\"%s\",\"effect\":\"%s\",\"case\":\"%s\",\"context\":\"%s\",\"scope\":\"%s\",\"intervention_kind\":\"%s\",\"intervention_tick\":%d,\"horizon\":%d,\"steps_completed\":%d,\"workers_requested\":%d,\"workers_actual\":[%d,%d,%d],\"simd_width_actual\":[%d,%d,%d],\"control_states_compared\":%d,\"pre_intervention_states_compared\":%d,\"future_states_compared\":%d,\"gate_applicability\":{\"only_zero_sign_changed\":%s,\"solver_eligibility\":%s,\"positive_control_sensitive\":%s,\"sleep_context\":%s,\"balanced_wake\":%s},\"gates\":{\"workers\":%s,\"warmstarting\":%s,\"finite_observations\":%s,\"sham_exact\":%s,\"prefix_exact\":%s,\"activation\":%s,\"readback\":%s,\"only_zero_sign_changed\":%s,\"expected_comparison_counts\":%s,\"solver_eligibility\":%s,\"positive_control_sensitive\":%s,\"sleep_context\":%s,\"balanced_wake\":%s,\"simd_width_stable_and_equal\":%s},\"intervention\":{\"baseline_eligible\":%d,\"sham_eligible\":%d,\"flip_eligible\":%d,\"flipped\":%d,\"confirmed\":%d,\"object_bytes_verified\":%d,\"positive_before\":%d,\"negative_before\":%d,\"awake_graph\":%d,\"sleeping\":%d,\"other\":%d,\"target_field_tag\":%u,\"public_alias_verified\":%s,\"warmstarting\":%s,\"next_step_retained\":%d,\"next_step_awake_graph\":%d,\"next_step_warmstarting\":%s,\"after_step_retained\":%d,\"after_step_sign_retained\":%d,\"impulse_readback_nonzero\":%s},\"immediate\":",
+        ok?"complete":"gate_failed",effect,cases[kind],sleepContext?"sleep_wake":"ordinary",scopes[scope],scope==3?"positive_control":"cache_zero_sign",tick,horizon,steps,
+        workers,actualWorkers[0],actualWorkers[1],actualWorkers[2],actualSimd[0],actualSimd[1],actualSimd[2],controlCount,prefixCount,futureCount,
+        scope!=3?"true":"false",scope!=3?"true":"false",scope==3?"true":"false",sleepContext?"true":"false",sleepContext?"true":"false",
         workerGate?"true":"false",warmGate?"true":"false",nonfiniteTick<0?"true":"false",control.differingTicks==0?"true":"false",
         prefix.differingTicks==0?"true":"false",activation?"true":"false",readback?"true":"false",onlySign?"true":"false",counts?"true":"false",
-        eligible?"true":"false",sensitive?"true":"false",selected[0].count,selected[1].count,selected[2].count,injection.flipped,injection.confirmed,
+        eligible?"true":"false",sensitive?"true":"false",sleepGate?"true":"false",wakeGate?"true":"false",simdGate?"true":"false",selected[0].count,selected[1].count,selected[2].count,injection.flipped,injection.confirmed,
         injection.bytesVerified,selected[2].positive,selected[2].negative,selected[2].awake,selected[2].sleeping,selected[2].other,
         scope==1?(kind==1?0x04040005u:0x04000005u):0u,selected[2].aliasVerified?"true":"false",injection.warm?"true":"false",
         injection.nextRetained,injection.nextAwake,injection.nextWarm?"true":"false",injection.afterRetained,injection.afterSignRetained,
         injection.impulseReadback?"true":"false");
-    print_effects(&immediate); fputs(",\"future\":",stdout); print_effects(&future);
+    print_effects(&immediate);
+    printf(",\"balanced_cycle\":{\"sleep_tick\":%d,\"wake_tick\":%d,\"pre_sleep_eligible\":[%d,%d,%d],\"sleep_body_calls\":[%d,%d,%d],\"sleeping_bodies\":[%d,%d,%d],\"wake_body_calls\":[%d,%d,%d],\"awake_bodies_before_step\":[%d,%d,%d],\"cache_preserved_across_sleep\":%s}",
+        cycle.sleepTick,cycle.wakeTick,cycle.preSleep[0],cycle.preSleep[1],cycle.preSleep[2],
+        cycle.sleepCalls[0],cycle.sleepCalls[1],cycle.sleepCalls[2],cycle.sleepingBodies[0],cycle.sleepingBodies[1],cycle.sleepingBodies[2],
+        cycle.wakeCalls[0],cycle.wakeCalls[1],cycle.wakeCalls[2],cycle.awakeBodies[0],cycle.awakeBodies[1],cycle.awakeBodies[2],cycle.preserved?"true":"false");
+    fputs(",\"future\":",stdout); print_effects(&future);
     fputs(",\"control_first_difference\":",stdout); print_finding(&control.first);
     fputs(",\"prefix_first_difference\":",stdout); print_finding(&prefix.first);
     printf(",\"nonfinite_tick\":%d,\"nonfinite_field_tag\":%u}\n",nonfiniteTick,nonfiniteTag);
@@ -293,21 +364,25 @@ static int run_pair(int kind,int scope,int tick,int horizon,int workers)
 }
 int main(int argc,char** argv)
 {
-    int kind=0,scope=0,tick=-1,horizon=8192,workers=1;
+    int kind=0,scope=0,tick=-1,horizon=8192,workers=1,sleepContext=0;
     for (int i=1;i<argc;i+=2) {
         if (i+1==argc) goto usage;
         if (strcmp(argv[i],"--case")==0) { kind=0; for (int k=1;k<=3;++k) if (strcmp(argv[i+1],cases[k])==0) kind=k; if (!kind) goto usage; }
         else if (strcmp(argv[i],"--scope")==0) {
             const char* scopes[4]={"unknown","single","all","impulse"}; scope=0;
             for (int k=1;k<=3;++k) if (strcmp(argv[i+1],scopes[k])==0) scope=k; if (!scope) goto usage;
+        } else if (strcmp(argv[i],"--context")==0) {
+            if (strcmp(argv[i+1],"ordinary")==0) sleepContext=0;
+            else if (strcmp(argv[i+1],"sleep_wake")==0) sleepContext=1;
+            else goto usage;
         } else if (strcmp(argv[i],"--tick")==0) { if (!number(argv[i+1],1,32767,&tick)) goto usage; }
         else if (strcmp(argv[i],"--horizon")==0) { if (!number(argv[i+1],2,32768,&horizon)) goto usage; }
         else if (strcmp(argv[i],"--workers")==0) { if (!number(argv[i+1],1,4,&workers) || workers==3) goto usage; }
         else goto usage;
     }
-    if (!kind || !scope || tick<1 || tick>=horizon || scope==3 && (kind!=1 || tick!=129)) goto usage;
-    return run_pair(kind,scope,tick,horizon,workers);
+    if (!kind || !scope || tick<1 || tick>=horizon || scope==3 && (kind!=1 || tick!=129 || sleepContext)) goto usage;
+    return run_pair(kind,scope,tick,horizon,workers,sleepContext);
 usage:
-    fputs("Usage: causal-replay --case contacts|joints|lifecycle --scope single|all|impulse --tick N [--workers 1|2|4] [--horizon 8192]\n",stderr);
+    fputs("Usage: causal-replay --case contacts|joints|lifecycle --scope single|all|impulse --tick N [--context ordinary|sleep_wake] [--workers 1|2|4] [--horizon 8192]\n",stderr);
     return 64;
 }

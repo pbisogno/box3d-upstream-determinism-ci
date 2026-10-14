@@ -34,16 +34,22 @@ EXPECTED_HOST = {
     "macos-clang-x64": ("Darwin", "x86_64"),
 }
 CASE_IDS = {"contacts": 1, "joints": 2, "lifecycle": 3}
-PAIR_SCHEMA = "box3d-causal-pair-v1"
-TRIAL_POINTS = (
-    ("contacts", 47), ("contacts", 129), ("contacts", 399),
-    ("joints", 128), ("joints", 399),
-    ("lifecycle", 52), ("lifecycle", 399),
+PAIR_SCHEMA = "box3d-causal-pair-v2"
+ORDINARY_TRIAL_POINTS = (
+    ("contacts", 47), ("contacts", 129), ("joints", 128), ("lifecycle", 52),
+)
+SLEEP_WAKE_TRIAL_POINTS = (
+    ("contacts", 47), ("joints", 128), ("lifecycle", 52),
 )
 PAIR_GATES = (
     "workers", "warmstarting", "finite_observations", "sham_exact", "prefix_exact",
     "activation", "readback", "only_zero_sign_changed", "expected_comparison_counts",
-    "solver_eligibility", "positive_control_sensitive",
+    "solver_eligibility", "positive_control_sensitive", "sleep_context", "balanced_wake",
+    "simd_width_stable_and_equal",
+)
+BALANCED_CYCLE_ARRAY_FIELDS = (
+    "pre_sleep_eligible", "sleep_body_calls", "sleeping_bodies",
+    "wake_body_calls", "awake_bodies_before_step",
 )
 PAIR_EFFECTS = {"no_selected_effect", "signed_zero_only", "nonzero_or_discrete_effect", "not_established"}
 PAIR_METRICS = (
@@ -306,16 +312,18 @@ def compact_pair(pair: dict[str, Any], args: argparse.Namespace, compiler_ids: d
                  exit_code: int, native_line: str) -> tuple[dict[str, Any], bool]:
     errors = []
     expected_kind = "positive_control" if args.scope == "impulse" else "cache_zero_sign"
+    is_sleep_wake = args.context == "sleep_wake"
     expected_counts = {
         "steps_completed": args.horizon,
         "workers_requested": args.workers,
-        "control_states_compared": args.horizon + 2,
-        "pre_intervention_states_compared": args.tick + 1,
+        "control_states_compared": args.horizon + (3 if is_sleep_wake else 2),
+        "pre_intervention_states_compared": args.tick + (2 if is_sleep_wake else 1),
         "future_states_compared": args.horizon - args.tick,
     }
     expected_fields = {
         "case": args.case,
         "scope": args.scope,
+        "context": args.context,
         "intervention_kind": expected_kind,
         "intervention_tick": args.tick,
         "horizon": args.horizon,
@@ -329,16 +337,24 @@ def compact_pair(pair: dict[str, Any], args: argparse.Namespace, compiler_ids: d
     actual_workers = pair.get("workers_actual")
     if actual_workers != [args.workers, args.workers, args.workers]:
         errors.append("workers_actual_mismatch")
+    actual_simd_widths = pair.get("simd_width_actual")
+    if (not isinstance(actual_simd_widths, list) or len(actual_simd_widths) != 3 or
+            any(type(width) is not int or width != args.simd for width in actual_simd_widths)):
+        errors.append("simd_width_actual_mismatch")
     if pair.get("effect") not in PAIR_EFFECTS:
         errors.append("effect_invalid")
     gates = pair.get("gates")
-    if not isinstance(gates, dict) or any(gates.get(name) is not True for name in PAIR_GATES):
+    if (not isinstance(gates, dict) or
+            any(gates.get(name) is not True for name in PAIR_GATES) or
+            any(value is not True for value in gates.values())):
         errors.append("one_or_more_native_gates_failed")
     applicability = pair.get("gate_applicability")
     expected_applicability = {
         "only_zero_sign_changed": args.scope != "impulse",
         "solver_eligibility": args.scope != "impulse",
         "positive_control_sensitive": args.scope == "impulse",
+        "sleep_context": is_sleep_wake,
+        "balanced_wake": is_sleep_wake,
     }
     if applicability != expected_applicability:
         errors.append("gate_applicability_mismatch")
@@ -346,6 +362,53 @@ def compact_pair(pair: dict[str, Any], args: argparse.Namespace, compiler_ids: d
         errors.append("effect_not_established")
     if pair.get("status") != "complete" or exit_code != 0:
         errors.append("native_trial_incomplete")
+
+    balanced_cycle = pair.get("balanced_cycle")
+    if not isinstance(balanced_cycle, dict):
+        balanced_cycle = {}
+        errors.append("balanced_cycle_metrics_missing")
+    else:
+        for name in ("sleep_tick", "wake_tick"):
+            if type(balanced_cycle.get(name)) is not int:
+                errors.append("balanced_cycle_metric_type_invalid")
+                break
+        for name in BALANCED_CYCLE_ARRAY_FIELDS:
+            values = balanced_cycle.get(name)
+            if (not isinstance(values, list) or len(values) != 3 or
+                    any(type(value) is not int or value < 0 for value in values)):
+                errors.append("balanced_cycle_metric_type_invalid")
+                break
+        if type(balanced_cycle.get("cache_preserved_across_sleep")) is not bool:
+            errors.append("balanced_cycle_metric_type_invalid")
+        if is_sleep_wake:
+            if (balanced_cycle.get("sleep_tick") != args.tick or
+                    balanced_cycle.get("wake_tick") != args.tick + 1):
+                errors.append("balanced_cycle_ticks_mismatch")
+            for name in BALANCED_CYCLE_ARRAY_FIELDS:
+                values = balanced_cycle.get(name)
+                if isinstance(values, list) and len(values) == 3 and any(value <= 0 for value in values):
+                    errors.append(f"{name}_missing")
+            wake_calls = balanced_cycle.get("wake_body_calls")
+            if (isinstance(wake_calls, list) and len(wake_calls) == 3 and
+                    len(set(wake_calls)) != 1):
+                errors.append("wake_body_calls_unbalanced")
+            sleep_calls = balanced_cycle.get("sleep_body_calls")
+            if (isinstance(sleep_calls, list) and len(sleep_calls) == 3 and
+                    len(set(sleep_calls)) != 1):
+                errors.append("sleep_body_calls_unbalanced")
+            for left, right in (("sleep_body_calls", "sleeping_bodies"),
+                                ("wake_body_calls", "awake_bodies_before_step")):
+                left_values, right_values = balanced_cycle.get(left), balanced_cycle.get(right)
+                if (isinstance(left_values, list) and len(left_values) == 3 and
+                        isinstance(right_values, list) and len(right_values) == 3 and
+                        left_values != right_values):
+                    errors.append(f"{left}_{right}_mismatch")
+            if balanced_cycle.get("cache_preserved_across_sleep") is not True:
+                errors.append("cache_not_preserved_across_sleep")
+        elif (balanced_cycle.get("sleep_tick") != -1 or balanced_cycle.get("wake_tick") != -1 or
+              balanced_cycle.get("cache_preserved_across_sleep") is not True or
+              any(balanced_cycle.get(name) != [0, 0, 0] for name in BALANCED_CYCLE_ARRAY_FIELDS)):
+            errors.append("unexpected_sleep_wake_cycle")
 
     intervention = pair.get("intervention")
     if not isinstance(intervention, dict):
@@ -366,6 +429,12 @@ def compact_pair(pair: dict[str, Any], args: argparse.Namespace, compiler_ids: d
             elif type(value) is not int or value < 0:
                 errors.append("intervention_metric_type_invalid")
                 break
+        if is_sleep_wake and isinstance(balanced_cycle, dict):
+            eligible = [intervention.get("baseline_eligible"),
+                        intervention.get("sham_eligible"),
+                        intervention.get("flip_eligible")]
+            if balanced_cycle.get("pre_sleep_eligible") != eligible:
+                errors.append("pre_sleep_eligibility_mismatch")
     immediate = pair.get("immediate")
     future = pair.get("future")
     if not isinstance(immediate, dict) or not isinstance(future, dict):
@@ -388,7 +457,7 @@ def compact_pair(pair: dict[str, Any], args: argparse.Namespace, compiler_ids: d
             errors.append("cache_flip_readback_missing")
 
     summary = {
-        "schema": "box3d-ci-causal-intervention-row-v1",
+        "schema": "box3d-ci-causal-intervention-row-v2",
         "revision": STRESS.PIN,
         "origin": args.origin,
         "configuration": args.config,
@@ -397,17 +466,20 @@ def compact_pair(pair: dict[str, Any], args: argparse.Namespace, compiler_ids: d
         "cmake_compilers": compiler_ids,
         "case": pair.get("case"),
         "scope": pair.get("scope"),
+        "context": pair.get("context"),
         "intervention_kind": pair.get("intervention_kind"),
         "intervention_tick": pair.get("intervention_tick"),
         "horizon": pair.get("horizon"),
         "steps_completed": pair.get("steps_completed"),
         "workers_actual": actual_workers,
+        "simd_width_actual": actual_simd_widths,
         "control_states_compared": pair.get("control_states_compared"),
         "pre_intervention_states_compared": pair.get("pre_intervention_states_compared"),
         "future_states_compared": pair.get("future_states_compared"),
         "effect": pair.get("effect"),
         "gate_applicability": applicability,
         "gates": gates,
+        "balanced_cycle": balanced_cycle,
         "intervention": {key: intervention.get(key) for key in INTERVENTION_FIELDS},
         "immediate": {key: immediate.get(key) for key in PAIR_METRICS},
         "future": {key: future.get(key) for key in PAIR_METRICS},
@@ -423,22 +495,28 @@ def compact_pair(pair: dict[str, Any], args: argparse.Namespace, compiler_ids: d
     return summary, not errors
 
 
-def trial_schedule() -> list[tuple[str, str, int]]:
-    return [(case, scope, tick) for case, tick in TRIAL_POINTS for scope in ("single", "all")] + [
-        ("contacts", "impulse", 129)
+def trial_schedule() -> list[tuple[str, str, int, str]]:
+    ordinary = [
+        (case, scope, tick, "ordinary")
+        for case, tick in ORDINARY_TRIAL_POINTS for scope in ("single", "all")
     ]
+    sleep_wake = [
+        (case, scope, tick, "sleep_wake")
+        for case, tick in SLEEP_WAKE_TRIAL_POINTS for scope in ("single", "all")
+    ]
+    return ordinary + sleep_wake + [("contacts", "impulse", 129, "ordinary")]
 
 
-def trial_error_row(args: argparse.Namespace, trial: tuple[str, str, int],
+def trial_error_row(args: argparse.Namespace, trial: tuple[str, str, int, str],
                     compiler_ids: dict[str, str] | None, status: str, detail: str,
                     exit_code: int | None = None) -> dict[str, Any]:
-    case, scope, tick = trial
+    case, scope, tick, context = trial
     detail = detail[:400]
     for private_path in (os.environ.get("RUNNER_TEMP", ""), str(ROOT)):
         if private_path:
             detail = detail.replace(private_path, "<runner-temp>")
     return {
-        "schema": "box3d-ci-causal-intervention-row-v1",
+        "schema": "box3d-ci-causal-intervention-row-v2",
         "revision": STRESS.PIN,
         "origin": args.origin,
         "configuration": args.config,
@@ -447,6 +525,7 @@ def trial_error_row(args: argparse.Namespace, trial: tuple[str, str, int],
         "cmake_compilers": compiler_ids,
         "case": case,
         "scope": scope,
+        "context": context,
         "intervention_tick": tick,
         "horizon": args.horizon,
         "status": status,
@@ -467,10 +546,10 @@ def intervene(args: argparse.Namespace) -> int:
         except (OSError, RuntimeError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as exc:
             build_error = f"{type(exc).__name__}: {exc}"
         rows = []
-        for case, scope, tick in trials:
-            trial = (case, scope, tick)
+        for case, scope, tick, context in trials:
+            trial = (case, scope, tick, context)
             trial_values = dict(vars(args))
-            trial_values.update(case=case, scope=scope, tick=tick)
+            trial_values.update(case=case, scope=scope, tick=tick, context=context)
             trial_args = argparse.Namespace(**trial_values)
             if build_error is not None or executable is None:
                 row = trial_error_row(trial_args, trial, compiler_ids,
@@ -478,7 +557,7 @@ def intervene(args: argparse.Namespace) -> int:
                 rows.append(row)
                 print(json.dumps(row, sort_keys=True, separators=(",", ":")), flush=True)
                 continue
-            command = [str(executable), "--case", case, "--scope", scope,
+            command = [str(executable), "--case", case, "--scope", scope, "--context", context,
                        "--tick", str(tick), "--workers", str(args.workers),
                        "--horizon", str(args.horizon)]
             result = None
@@ -496,7 +575,7 @@ def intervene(args: argparse.Namespace) -> int:
     passed = (len(rows) == 15 and len(trials) == 15 and build_error is None and
               all(row.get("status") == "complete" for row in rows))
     summary = {
-        "schema": "box3d-ci-causal-intervene-v1",
+        "schema": "box3d-ci-causal-intervene-v2",
         "revision": STRESS.PIN,
         "origin": args.origin,
         "configuration": args.config,
@@ -509,6 +588,7 @@ def intervene(args: argparse.Namespace) -> int:
         "completed_trials": sum(row.get("status") == "complete" for row in rows),
         "failed_trials": sum(row.get("status") != "complete" for row in rows),
         "trials": [{"case": row.get("case"), "scope": row.get("scope"),
+                    "context": row.get("context"),
                     "intervention_tick": row.get("intervention_tick"), "status": row.get("status"),
                     "effect": row.get("effect"), "native_exit_code": row.get("native_exit_code"),
                     "validation_errors": row.get("validation_errors", [])} for row in rows],
@@ -554,7 +634,7 @@ def main() -> int:
         for private_path in (os.environ.get("RUNNER_TEMP", ""), str(ROOT)):
             if private_path:
                 detail = detail.replace(private_path, "<runner-temp>")
-        print(json.dumps({"schema": "box3d-ci-causal-error-v1",
+        print(json.dumps({"schema": "box3d-ci-causal-error-v2",
                           "error_type": type(exc).__name__, "detail": detail[:600]},
                          sort_keys=True, separators=(",", ":")), file=sys.stderr, flush=True)
         return 2
