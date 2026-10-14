@@ -1,0 +1,58 @@
+name: Public upstream format layout
+on:
+  push:
+    branches: [main]
+    paths: ['layout/**', '.github/workflows/layout.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: format-layout-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  layout:
+    if: github.event.repository.visibility == 'public'
+    name: Layout / ${{ matrix.target }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        include:
+          - {target: windows-msvc-x64, runner: windows-2022, arch: x86_64, compiler: msvc}
+          - {target: linux-gcc-x64, runner: ubuntu-24.04, arch: x86_64, compiler: gcc}
+          - {target: linux-clang-arm64, runner: ubuntu-24.04-arm, arch: arm64, compiler: clang}
+          - {target: macos-clang-arm64, runner: macos-15, arch: arm64, compiler: clang}
+          - {target: macos-clang-x64, runner: macos-15-intel, arch: x86_64, compiler: clang}
+    steps:
+      - name: Checkout generic sources
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {fetch-depth: 1, persist-credentials: false}
+      - name: Checkout unchanged upstream
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: erincatto/box3d
+          ref: 5d83df83ab47172c2c745b44315e7538ead02397
+          path: upstream
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Observe CPU and architecture
+        shell: python
+        run: |
+          import subprocess
+          subprocess.run(['python','ci.py','inventory','--expected-arch','${{ matrix.arch }}'],check=True)
+      - name: Inspect published struct definitions
+        shell: python
+        run: |
+          import ci, json, pathlib, subprocess
+          ci.verified_source(pathlib.Path('upstream'))
+          args=['cmake','-S','layout','-B','build-layout','-DCMAKE_BUILD_TYPE=RelWithDebInfo']+ci.cmake_compiler_args('${{ matrix.compiler }}',None)
+          configured=ci.run(args,timeout=120)
+          if configured.returncode:
+              print(configured.stdout)
+              raise SystemExit(configured.returncode)
+          print(json.dumps({'schema':'box3d-layout-build-v1','cmake_compilers':ci.cmake_ids(configured.stdout)}))
+          subprocess.run(['cmake','--build','build-layout','--config','RelWithDebInfo','--target','recording-layout','--parallel','2'],check=True)
+          exe=pathlib.Path('build-layout/bin')/('RelWithDebInfo/recording-layout.exe' if '${{ runner.os }}'=='Windows' else 'recording-layout')
+          subprocess.run([str(exe)],check=True)

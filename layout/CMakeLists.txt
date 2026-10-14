@@ -1,0 +1,8 @@
+cmake_minimum_required(VERSION 3.22)
+project(box3d_public_layout LANGUAGES C)
+set(UPSTREAM_SOURCE "${CMAKE_CURRENT_LIST_DIR}/../upstream" CACHE PATH "Unchanged public Box3D source checkout")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+add_executable(recording-layout layout.c)
+target_include_directories(recording-layout PRIVATE "${UPSTREAM_SOURCE}/include" "${UPSTREAM_SOURCE}/src")
+target_compile_definitions(recording-layout PRIVATE BOX3D_DISABLE_AVX2)
+set_target_properties(recording-layout PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
