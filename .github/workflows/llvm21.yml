@@ -1,0 +1,53 @@
+name: Verified LLVM 21 ClangCL upstream tests
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verified-llvm21-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    if: github.event.repository.visibility == 'public'
+    name: Windows ClangCL 21.1.8 / ${{ matrix.config }} / AVX2 ON
+    runs-on: windows-2022
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        config: [Debug, RelWithDebInfo]
+    steps:
+      - name: Checkout generic sources
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {fetch-depth: 1, persist-credentials: false}
+      - name: Checkout unchanged upstream
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: erincatto/box3d
+          ref: 5d83df83ab47172c2c745b44315e7538ead02397
+          path: upstream
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Observe CPU and architecture
+        shell: python
+        run: |
+          import subprocess
+          subprocess.run(['python','ci.py','inventory','--expected-arch','x86_64'],check=True)
+      - name: Verify and extract fixed LLVM package
+        id: llvm
+        shell: python
+        run: |
+          import subprocess
+          subprocess.run(['python','tools/llvm21_runner.py'],check=True)
+      - name: Require selected compiler and unchanged upstream tests
+        shell: python
+        env:
+          APPROVED_LLVM_ROOT: ${{ steps.llvm.outputs.llvm_root }}
+        run: |
+          import os, subprocess
+          subprocess.run(['python','llvm21_tests.py','--llvm-root',os.environ['APPROVED_LLVM_ROOT'],'--config','${{ matrix.config }}'],check=True)
