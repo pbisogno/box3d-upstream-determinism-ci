@@ -1,0 +1,756 @@
+name: Public scene replay and restore tests
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Bounded smoke run or expanded public matrix
+        required: true
+        default: smoke
+        type: choice
+        options: [smoke, full]
+permissions:
+  contents: read
+concurrency:
+  group: public-stress-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  capture_windows:
+    if: github.event.repository.visibility == 'public'
+    name: Public scenes / windows-msvc-x64
+    runs-on: windows-2022
+    timeout-minutes: 20
+    outputs:
+      contacts: ${{ steps.emit.outputs.contacts }}
+      joints: ${{ steps.emit.outputs.joints }}
+      lifecycle: ${{ steps.emit.outputs.lifecycle }}
+    steps:
+      - name: Checkout generic sources
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {fetch-depth: 1, persist-credentials: false}
+      - name: Checkout unchanged upstream
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: erincatto/box3d
+          ref: 5d83df83ab47172c2c745b44315e7538ead02397
+          path: upstream
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Observe CPU and architecture
+        shell: python
+        run: |
+          import subprocess
+          subprocess.run(['python','ci.py','inventory','--expected-arch','x86_64'],check=True)
+      - name: Capture and verify three public scenes
+        id: emit
+        shell: python
+        env:
+          PUBLIC_ORIGIN: windows-msvc-x64
+        run: |
+          import subprocess
+          subprocess.run(["python", "stress_ci.py", "produce", "--compiler", "msvc", "--config", "RelWithDebInfo", "--build", "stress-build"],check=True)
+
+  capture_linux_x64:
+    if: github.event.repository.visibility == 'public'
+    name: Public scenes / linux-gcc-x64
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    outputs:
+      contacts: ${{ steps.emit.outputs.contacts }}
+      joints: ${{ steps.emit.outputs.joints }}
+      lifecycle: ${{ steps.emit.outputs.lifecycle }}
+    steps:
+      - name: Checkout generic sources
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {fetch-depth: 1, persist-credentials: false}
+      - name: Checkout unchanged upstream
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: erincatto/box3d
+          ref: 5d83df83ab47172c2c745b44315e7538ead02397
+          path: upstream
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Observe CPU and architecture
+        shell: python
+        run: |
+          import subprocess
+          subprocess.run(['python','ci.py','inventory','--expected-arch','x86_64'],check=True)
+      - name: Capture and verify three public scenes
+        id: emit
+        shell: python
+        env:
+          PUBLIC_ORIGIN: linux-gcc-x64
+        run: |
+          import subprocess
+          subprocess.run(["python", "stress_ci.py", "produce", "--compiler", "gcc", "--config", "RelWithDebInfo", "--build", "stress-build"],check=True)
+
+  capture_linux_arm64:
+    if: github.event.repository.visibility == 'public'
+    name: Public scenes / linux-clang-arm64
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 20
+    outputs:
+      contacts: ${{ steps.emit.outputs.contacts }}
+      joints: ${{ steps.emit.outputs.joints }}
+      lifecycle: ${{ steps.emit.outputs.lifecycle }}
+    steps:
+      - name: Checkout generic sources
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {fetch-depth: 1, persist-credentials: false}
+      - name: Checkout unchanged upstream
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: erincatto/box3d
+          ref: 5d83df83ab47172c2c745b44315e7538ead02397
+          path: upstream
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Observe CPU and architecture
+        shell: python
+        run: |
+          import subprocess
+          subprocess.run(['python','ci.py','inventory','--expected-arch','arm64'],check=True)
+      - name: Capture and verify three public scenes
+        id: emit
+        shell: python
+        env:
+          PUBLIC_ORIGIN: linux-clang-arm64
+        run: |
+          import subprocess
+          subprocess.run(["python", "stress_ci.py", "produce", "--compiler", "clang", "--config", "RelWithDebInfo", "--build", "stress-build"],check=True)
+
+  capture_macos_arm64:
+    if: github.event.repository.visibility == 'public'
+    name: Public scenes / macos-clang-arm64
+    runs-on: macos-15
+    timeout-minutes: 20
+    outputs:
+      contacts: ${{ steps.emit.outputs.contacts }}
+      joints: ${{ steps.emit.outputs.joints }}
+      lifecycle: ${{ steps.emit.outputs.lifecycle }}
+    steps:
+      - name: Checkout generic sources
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {fetch-depth: 1, persist-credentials: false}
+      - name: Checkout unchanged upstream
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: erincatto/box3d
+          ref: 5d83df83ab47172c2c745b44315e7538ead02397
+          path: upstream
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Observe CPU and architecture
+        shell: python
+        run: |
+          import subprocess
+          subprocess.run(['python','ci.py','inventory','--expected-arch','arm64'],check=True)
+      - name: Capture and verify three public scenes
+        id: emit
+        shell: python
+        env:
+          PUBLIC_ORIGIN: macos-clang-arm64
+        run: |
+          import subprocess
+          subprocess.run(["python", "stress_ci.py", "produce", "--compiler", "clang", "--config", "RelWithDebInfo", "--build", "stress-build"],check=True)
+
+  capture_macos_intel:
+    if: github.event.repository.visibility == 'public'
+    name: Public scenes / macos-clang-x64
+    runs-on: macos-15-intel
+    timeout-minutes: 20
+    outputs:
+      contacts: ${{ steps.emit.outputs.contacts }}
+      joints: ${{ steps.emit.outputs.joints }}
+      lifecycle: ${{ steps.emit.outputs.lifecycle }}
+    steps:
+      - name: Checkout generic sources
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {fetch-depth: 1, persist-credentials: false}
+      - name: Checkout unchanged upstream
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: erincatto/box3d
+          ref: 5d83df83ab47172c2c745b44315e7538ead02397
+          path: upstream
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Observe CPU and architecture
+        shell: python
+        run: |
+          import subprocess
+          subprocess.run(['python','ci.py','inventory','--expected-arch','x86_64'],check=True)
+      - name: Capture and verify three public scenes
+        id: emit
+        shell: python
+        env:
+          PUBLIC_ORIGIN: macos-clang-x64
+        run: |
+          import subprocess
+          subprocess.run(["python", "stress_ci.py", "produce", "--compiler", "clang", "--config", "RelWithDebInfo", "--build", "stress-build"],check=True)
+
+  restore_relwithdebinfo:
+    if: github.event.repository.visibility == 'public'
+    name: Restore / ${{ matrix.target }} / RelWithDebInfo / workers4
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        include:
+          - target: windows-msvc-x64
+            runner: windows-2022
+            arch: x86_64
+            compiler: msvc
+          - target: linux-gcc-x64
+            runner: ubuntu-24.04
+            arch: x86_64
+            compiler: gcc
+          - target: linux-clang-arm64
+            runner: ubuntu-24.04-arm
+            arch: arm64
+            compiler: clang
+          - target: macos-clang-arm64
+            runner: macos-15
+            arch: arm64
+            compiler: clang
+          - target: macos-clang-x64
+            runner: macos-15-intel
+            arch: x86_64
+            compiler: clang
+    steps:
+      - name: Checkout generic sources
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {fetch-depth: 1, persist-credentials: false}
+      - name: Checkout unchanged upstream
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: erincatto/box3d
+          ref: 5d83df83ab47172c2c745b44315e7538ead02397
+          path: upstream
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Observe CPU and architecture
+        shell: python
+        run: |
+          import subprocess
+          subprocess.run(['python','ci.py','inventory','--expected-arch','${{ matrix.arch }}'],check=True)
+      - name: Compare repeated restorations to original fields
+        shell: python
+        run: |
+          import subprocess
+          subprocess.run(["python", "stress_ci.py", "stress", "--compiler", "${{ matrix.compiler }}", "--config", "RelWithDebInfo", "--workers", "4", "--cycles", "100", "--build", "stress-build"],check=True)
+
+  restore_debug:
+    if: github.event.repository.visibility == 'public' && inputs.mode == 'full'
+    name: Restore / ${{ matrix.target }} / Debug / workers4
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        include:
+          - target: windows-msvc-x64
+            runner: windows-2022
+            arch: x86_64
+            compiler: msvc
+          - target: linux-gcc-x64
+            runner: ubuntu-24.04
+            arch: x86_64
+            compiler: gcc
+          - target: linux-clang-arm64
+            runner: ubuntu-24.04-arm
+            arch: arm64
+            compiler: clang
+          - target: macos-clang-arm64
+            runner: macos-15
+            arch: arm64
+            compiler: clang
+          - target: macos-clang-x64
+            runner: macos-15-intel
+            arch: x86_64
+            compiler: clang
+    steps:
+      - name: Checkout generic sources
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {fetch-depth: 1, persist-credentials: false}
+      - name: Checkout unchanged upstream
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: erincatto/box3d
+          ref: 5d83df83ab47172c2c745b44315e7538ead02397
+          path: upstream
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Observe CPU and architecture
+        shell: python
+        run: |
+          import subprocess
+          subprocess.run(['python','ci.py','inventory','--expected-arch','${{ matrix.arch }}'],check=True)
+      - name: Compare repeated restorations to original fields
+        shell: python
+        run: |
+          import subprocess
+          subprocess.run(["python", "stress_ci.py", "stress", "--compiler", "${{ matrix.compiler }}", "--config", "Debug", "--workers", "4", "--cycles", "100", "--build", "stress-build"],check=True)
+
+  consume:
+    if: github.event.repository.visibility == 'public' && inputs.mode == 'full'
+    needs: [capture_windows, capture_linux_x64, capture_linux_arm64, capture_macos_arm64, capture_macos_intel]
+    name: Cross-host / ${{ matrix.target }} / ${{ matrix.config }} / workers${{ matrix.workers }} / AVX2${{ matrix.avx2 }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        include:
+          - target: windows-msvc-x64
+            runner: windows-2022
+            arch: x86_64
+            compiler: msvc
+            config: Debug
+            workers: 1
+            simd: 4
+            avx2: OFF
+          - target: windows-msvc-x64
+            runner: windows-2022
+            arch: x86_64
+            compiler: msvc
+            config: Debug
+            workers: 1
+            simd: 8
+            avx2: ON
+          - target: windows-msvc-x64
+            runner: windows-2022
+            arch: x86_64
+            compiler: msvc
+            config: Debug
+            workers: 2
+            simd: 4
+            avx2: OFF
+          - target: windows-msvc-x64
+            runner: windows-2022
+            arch: x86_64
+            compiler: msvc
+            config: Debug
+            workers: 2
+            simd: 8
+            avx2: ON
+          - target: windows-msvc-x64
+            runner: windows-2022
+            arch: x86_64
+            compiler: msvc
+            config: Debug
+            workers: 4
+            simd: 4
+            avx2: OFF
+          - target: windows-msvc-x64
+            runner: windows-2022
+            arch: x86_64
+            compiler: msvc
+            config: Debug
+            workers: 4
+            simd: 8
+            avx2: ON
+          - target: windows-msvc-x64
+            runner: windows-2022
+            arch: x86_64
+            compiler: msvc
+            config: RelWithDebInfo
+            workers: 1
+            simd: 4
+            avx2: OFF
+          - target: windows-msvc-x64
+            runner: windows-2022
+            arch: x86_64
+            compiler: msvc
+            config: RelWithDebInfo
+            workers: 1
+            simd: 8
+            avx2: ON
+          - target: windows-msvc-x64
+            runner: windows-2022
+            arch: x86_64
+            compiler: msvc
+            config: RelWithDebInfo
+            workers: 2
+            simd: 4
+            avx2: OFF
+          - target: windows-msvc-x64
+            runner: windows-2022
+            arch: x86_64
+            compiler: msvc
+            config: RelWithDebInfo
+            workers: 2
+            simd: 8
+            avx2: ON
+          - target: windows-msvc-x64
+            runner: windows-2022
+            arch: x86_64
+            compiler: msvc
+            config: RelWithDebInfo
+            workers: 4
+            simd: 4
+            avx2: OFF
+          - target: windows-msvc-x64
+            runner: windows-2022
+            arch: x86_64
+            compiler: msvc
+            config: RelWithDebInfo
+            workers: 4
+            simd: 8
+            avx2: ON
+          - target: linux-gcc-x64
+            runner: ubuntu-24.04
+            arch: x86_64
+            compiler: gcc
+            config: Debug
+            workers: 1
+            simd: 4
+            avx2: OFF
+          - target: linux-gcc-x64
+            runner: ubuntu-24.04
+            arch: x86_64
+            compiler: gcc
+            config: Debug
+            workers: 1
+            simd: 8
+            avx2: ON
+          - target: linux-gcc-x64
+            runner: ubuntu-24.04
+            arch: x86_64
+            compiler: gcc
+            config: Debug
+            workers: 2
+            simd: 4
+            avx2: OFF
+          - target: linux-gcc-x64
+            runner: ubuntu-24.04
+            arch: x86_64
+            compiler: gcc
+            config: Debug
+            workers: 2
+            simd: 8
+            avx2: ON
+          - target: linux-gcc-x64
+            runner: ubuntu-24.04
+            arch: x86_64
+            compiler: gcc
+            config: Debug
+            workers: 4
+            simd: 4
+            avx2: OFF
+          - target: linux-gcc-x64
+            runner: ubuntu-24.04
+            arch: x86_64
+            compiler: gcc
+            config: Debug
+            workers: 4
+            simd: 8
+            avx2: ON
+          - target: linux-gcc-x64
+            runner: ubuntu-24.04
+            arch: x86_64
+            compiler: gcc
+            config: RelWithDebInfo
+            workers: 1
+            simd: 4
+            avx2: OFF
+          - target: linux-gcc-x64
+            runner: ubuntu-24.04
+            arch: x86_64
+            compiler: gcc
+            config: RelWithDebInfo
+            workers: 1
+            simd: 8
+            avx2: ON
+          - target: linux-gcc-x64
+            runner: ubuntu-24.04
+            arch: x86_64
+            compiler: gcc
+            config: RelWithDebInfo
+            workers: 2
+            simd: 4
+            avx2: OFF
+          - target: linux-gcc-x64
+            runner: ubuntu-24.04
+            arch: x86_64
+            compiler: gcc
+            config: RelWithDebInfo
+            workers: 2
+            simd: 8
+            avx2: ON
+          - target: linux-gcc-x64
+            runner: ubuntu-24.04
+            arch: x86_64
+            compiler: gcc
+            config: RelWithDebInfo
+            workers: 4
+            simd: 4
+            avx2: OFF
+          - target: linux-gcc-x64
+            runner: ubuntu-24.04
+            arch: x86_64
+            compiler: gcc
+            config: RelWithDebInfo
+            workers: 4
+            simd: 8
+            avx2: ON
+          - target: linux-clang-arm64
+            runner: ubuntu-24.04-arm
+            arch: arm64
+            compiler: clang
+            config: Debug
+            workers: 1
+            simd: 4
+            avx2: OFF
+          - target: linux-clang-arm64
+            runner: ubuntu-24.04-arm
+            arch: arm64
+            compiler: clang
+            config: Debug
+            workers: 2
+            simd: 4
+            avx2: OFF
+          - target: linux-clang-arm64
+            runner: ubuntu-24.04-arm
+            arch: arm64
+            compiler: clang
+            config: Debug
+            workers: 4
+            simd: 4
+            avx2: OFF
+          - target: linux-clang-arm64
+            runner: ubuntu-24.04-arm
+            arch: arm64
+            compiler: clang
+            config: RelWithDebInfo
+            workers: 1
+            simd: 4
+            avx2: OFF
+          - target: linux-clang-arm64
+            runner: ubuntu-24.04-arm
+            arch: arm64
+            compiler: clang
+            config: RelWithDebInfo
+            workers: 2
+            simd: 4
+            avx2: OFF
+          - target: linux-clang-arm64
+            runner: ubuntu-24.04-arm
+            arch: arm64
+            compiler: clang
+            config: RelWithDebInfo
+            workers: 4
+            simd: 4
+            avx2: OFF
+          - target: macos-clang-arm64
+            runner: macos-15
+            arch: arm64
+            compiler: clang
+            config: Debug
+            workers: 1
+            simd: 4
+            avx2: OFF
+          - target: macos-clang-arm64
+            runner: macos-15
+            arch: arm64
+            compiler: clang
+            config: Debug
+            workers: 2
+            simd: 4
+            avx2: OFF
+          - target: macos-clang-arm64
+            runner: macos-15
+            arch: arm64
+            compiler: clang
+            config: Debug
+            workers: 4
+            simd: 4
+            avx2: OFF
+          - target: macos-clang-arm64
+            runner: macos-15
+            arch: arm64
+            compiler: clang
+            config: RelWithDebInfo
+            workers: 1
+            simd: 4
+            avx2: OFF
+          - target: macos-clang-arm64
+            runner: macos-15
+            arch: arm64
+            compiler: clang
+            config: RelWithDebInfo
+            workers: 2
+            simd: 4
+            avx2: OFF
+          - target: macos-clang-arm64
+            runner: macos-15
+            arch: arm64
+            compiler: clang
+            config: RelWithDebInfo
+            workers: 4
+            simd: 4
+            avx2: OFF
+          - target: macos-clang-x64
+            runner: macos-15-intel
+            arch: x86_64
+            compiler: clang
+            config: Debug
+            workers: 1
+            simd: 4
+            avx2: OFF
+          - target: macos-clang-x64
+            runner: macos-15-intel
+            arch: x86_64
+            compiler: clang
+            config: Debug
+            workers: 1
+            simd: 8
+            avx2: ON
+          - target: macos-clang-x64
+            runner: macos-15-intel
+            arch: x86_64
+            compiler: clang
+            config: Debug
+            workers: 2
+            simd: 4
+            avx2: OFF
+          - target: macos-clang-x64
+            runner: macos-15-intel
+            arch: x86_64
+            compiler: clang
+            config: Debug
+            workers: 2
+            simd: 8
+            avx2: ON
+          - target: macos-clang-x64
+            runner: macos-15-intel
+            arch: x86_64
+            compiler: clang
+            config: Debug
+            workers: 4
+            simd: 4
+            avx2: OFF
+          - target: macos-clang-x64
+            runner: macos-15-intel
+            arch: x86_64
+            compiler: clang
+            config: Debug
+            workers: 4
+            simd: 8
+            avx2: ON
+          - target: macos-clang-x64
+            runner: macos-15-intel
+            arch: x86_64
+            compiler: clang
+            config: RelWithDebInfo
+            workers: 1
+            simd: 4
+            avx2: OFF
+          - target: macos-clang-x64
+            runner: macos-15-intel
+            arch: x86_64
+            compiler: clang
+            config: RelWithDebInfo
+            workers: 1
+            simd: 8
+            avx2: ON
+          - target: macos-clang-x64
+            runner: macos-15-intel
+            arch: x86_64
+            compiler: clang
+            config: RelWithDebInfo
+            workers: 2
+            simd: 4
+            avx2: OFF
+          - target: macos-clang-x64
+            runner: macos-15-intel
+            arch: x86_64
+            compiler: clang
+            config: RelWithDebInfo
+            workers: 2
+            simd: 8
+            avx2: ON
+          - target: macos-clang-x64
+            runner: macos-15-intel
+            arch: x86_64
+            compiler: clang
+            config: RelWithDebInfo
+            workers: 4
+            simd: 4
+            avx2: OFF
+          - target: macos-clang-x64
+            runner: macos-15-intel
+            arch: x86_64
+            compiler: clang
+            config: RelWithDebInfo
+            workers: 4
+            simd: 8
+            avx2: ON
+    steps:
+      - name: Checkout generic sources
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {fetch-depth: 1, persist-credentials: false}
+      - name: Checkout unchanged upstream
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: erincatto/box3d
+          ref: 5d83df83ab47172c2c745b44315e7538ead02397
+          path: upstream
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Observe CPU and architecture
+        shell: python
+        run: |
+          import subprocess
+          subprocess.run(['python','ci.py','inventory','--expected-arch','${{ matrix.arch }}'],check=True)
+      - name: Replay exact contacts records from all five origins
+        id: case_contacts
+        continue-on-error: true
+        shell: python
+        env:
+          PUBLIC_RECORD_WINDOWS: ${{ needs.capture_windows.outputs.contacts }}
+          PUBLIC_RECORD_LINUX_X64: ${{ needs.capture_linux_x64.outputs.contacts }}
+          PUBLIC_RECORD_LINUX_ARM64: ${{ needs.capture_linux_arm64.outputs.contacts }}
+          PUBLIC_RECORD_MACOS_ARM64: ${{ needs.capture_macos_arm64.outputs.contacts }}
+          PUBLIC_RECORD_MACOS_INTEL: ${{ needs.capture_macos_intel.outputs.contacts }}
+        run: |
+          import subprocess
+          subprocess.run(["python", "stress_ci.py", "consume", "--case", "contacts", "--compiler", "${{ matrix.compiler }}", "--config", "${{ matrix.config }}", "--simd", "${{ matrix.simd }}", "--workers", "${{ matrix.workers }}", "--cycles", "4", "--build", "stress-build"],check=True)
+      - name: Replay exact joints records from all five origins
+        id: case_joints
+        continue-on-error: true
+        shell: python
+        env:
+          PUBLIC_RECORD_WINDOWS: ${{ needs.capture_windows.outputs.joints }}
+          PUBLIC_RECORD_LINUX_X64: ${{ needs.capture_linux_x64.outputs.joints }}
+          PUBLIC_RECORD_LINUX_ARM64: ${{ needs.capture_linux_arm64.outputs.joints }}
+          PUBLIC_RECORD_MACOS_ARM64: ${{ needs.capture_macos_arm64.outputs.joints }}
+          PUBLIC_RECORD_MACOS_INTEL: ${{ needs.capture_macos_intel.outputs.joints }}
+        run: |
+          import subprocess
+          subprocess.run(["python", "stress_ci.py", "consume", "--case", "joints", "--compiler", "${{ matrix.compiler }}", "--config", "${{ matrix.config }}", "--simd", "${{ matrix.simd }}", "--workers", "${{ matrix.workers }}", "--cycles", "4", "--build", "stress-build"],check=True)
+      - name: Replay exact lifecycle records from all five origins
+        id: case_lifecycle
+        continue-on-error: true
+        shell: python
+        env:
+          PUBLIC_RECORD_WINDOWS: ${{ needs.capture_windows.outputs.lifecycle }}
+          PUBLIC_RECORD_LINUX_X64: ${{ needs.capture_linux_x64.outputs.lifecycle }}
+          PUBLIC_RECORD_LINUX_ARM64: ${{ needs.capture_linux_arm64.outputs.lifecycle }}
+          PUBLIC_RECORD_MACOS_ARM64: ${{ needs.capture_macos_arm64.outputs.lifecycle }}
+          PUBLIC_RECORD_MACOS_INTEL: ${{ needs.capture_macos_intel.outputs.lifecycle }}
+        run: |
+          import subprocess
+          subprocess.run(["python", "stress_ci.py", "consume", "--case", "lifecycle", "--compiler", "${{ matrix.compiler }}", "--config", "${{ matrix.config }}", "--simd", "${{ matrix.simd }}", "--workers", "${{ matrix.workers }}", "--cycles", "4", "--build", "stress-build"],check=True)
+      - name: Require all three actual case steps to pass
+        if: always()
+        shell: python
+        run: |
+          outcomes=['${{ steps.case_contacts.outcome }}','${{ steps.case_joints.outcome }}','${{ steps.case_lifecycle.outcome }}']
+          print({'case_step_outcomes':outcomes})
+          if outcomes!=['success','success','success']:
+              raise SystemExit(1)
