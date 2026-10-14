@@ -28,7 +28,10 @@ ORIGINS = {
     "PUBLIC_RECORD_MACOS_INTEL": "macos-clang-x64",
 }
 RAW_LIMIT = 300 * 1024
-RECORD_LIMIT = 28000
+CHUNK_SIZE = 20000
+CHUNK_COUNT = 6
+RECORD_LIMIT = CHUNK_SIZE * CHUNK_COUNT
+EMPTY_CHUNK_SENTINEL = "."
 HEADER = struct.Struct("<IIII")
 STATE_COUNT = struct.Struct("<I")
 CELL = struct.Struct("<II")
@@ -317,6 +320,42 @@ def append_output(path: pathlib.Path, key: str, value: str) -> None:
         stream.write(f"{key}={value}\n")
 
 
+def split_transport_record(serialized: str) -> list[str]:
+    if not serialized or not serialized.isascii():
+        raise RuntimeError("transfer record must be nonempty ASCII JSON")
+    if len(serialized) > RECORD_LIMIT:
+        raise RuntimeError(f"transfer record is {len(serialized)} chars (limit {RECORD_LIMIT})")
+    chunks = [serialized[start:start + CHUNK_SIZE] for start in range(0, len(serialized), CHUNK_SIZE)]
+    if len(chunks) > CHUNK_COUNT:
+        raise RuntimeError(f"transfer record cannot fit in {CHUNK_COUNT} chunks")
+    return chunks + [EMPTY_CHUNK_SENTINEL] * (CHUNK_COUNT - len(chunks))
+
+
+def join_transport_chunks(chunks: list[str], label: str) -> str:
+    if len(chunks) != CHUNK_COUNT:
+        raise RuntimeError(f"{label} must provide exactly {CHUNK_COUNT} chunks")
+    normalized = []
+    for index, chunk in enumerate(chunks):
+        if not chunk:
+            raise RuntimeError(f"{label}_{index} is empty; expected data or the sentinel")
+        normalized.append("" if chunk == EMPTY_CHUNK_SENTINEL else chunk)
+    chunks = normalized
+    saw_empty = False
+    for index, chunk in enumerate(chunks):
+        if len(chunk) > CHUNK_SIZE:
+            raise RuntimeError(f"{label}_{index} exceeds the {CHUNK_SIZE}-character chunk limit")
+        if not chunk:
+            saw_empty = True
+        elif saw_empty:
+            raise RuntimeError(f"{label}_{index} is nonempty after an empty tail chunk")
+        if not chunk.isascii():
+            raise RuntimeError(f"{label}_{index} contains non-ASCII transport data")
+    serialized = "".join(chunks)
+    if not serialized or len(serialized) > RECORD_LIMIT:
+        raise RuntimeError(f"{label} chunks do not contain a complete bounded record")
+    return serialized
+
+
 def produce(args: argparse.Namespace) -> int:
     origin = os.environ.get("PUBLIC_ORIGIN", "")
     if not re.fullmatch(r"[a-z0-9][a-z0-9_-]{0,63}", origin):
@@ -339,19 +378,25 @@ def produce(args: argparse.Namespace) -> int:
             full = parse_trace(full_path, expected_case=case, expected_checkpoint=0, expected_frames=4096)
             record = make_record(origin, case, checkpoint, cap, recording, reference, full)
             encoded = json.dumps(record, sort_keys=True, separators=(",", ":"))
-            if len(encoded) > RECORD_LIMIT:
-                raise RuntimeError(f"{case} transfer record is {len(encoded)} chars (limit {RECORD_LIMIT})")
-            append_output(pathlib.Path(output_path), case, encoded)
+            chunks = split_transport_record(encoded)
+            for index, chunk in enumerate(chunks):
+                append_output(pathlib.Path(output_path), f"{case}_{index}", chunk)
             print(json.dumps({"schema": "box3d-ci-stress-produce-case-v1", "origin": origin,
                               "case": case, "recording_bytes": len(recording),
                               "reference_bytes": len(reference), "recording_sha256": record["recording"]["sha256"],
                               "reference_sha256": record["reference"]["sha256"],
                               "full_trace_sha256": full["sha256"], "full_trace_blocks": len(full["blockHashes"]),
                               "capture_metadata": cap, "serialized_output_characters": len(encoded),
+                              "chunk_characters": [0 if chunk == EMPTY_CHUNK_SENTINEL else len(chunk) for chunk in chunks],
+                              "empty_chunk_sentinel": EMPTY_CHUNK_SENTINEL,
                               "local_verify": local_verify, "payload_stdout": False},
                              sort_keys=True, separators=(",", ":")))
+    output_keys = [f"{case}_{index}" for case in CASES for index in range(CHUNK_COUNT)]
     print(json.dumps({"schema": "box3d-ci-stress-produce-v1", "revision": PIN,
-                      "origin": origin, "cases": list(CASES), "output_keys": list(CASES),
+                      "origin": origin, "cases": list(CASES), "output_keys": output_keys,
+                      "chunk_count_per_case": CHUNK_COUNT, "chunk_size_characters": CHUNK_SIZE,
+                      "case_record_limit_characters": RECORD_LIMIT,
+                      "empty_chunk_sentinel": EMPTY_CHUNK_SENTINEL,
                       "cmake_compilers": compiler_ids, "payload_stdout": False},
                      sort_keys=True, separators=(",", ":")))
     return 0
@@ -409,39 +454,76 @@ def validate_embedded_capture(capture: Any, case: str, checkpoint: int,
         raise RuntimeError("producer did not report worker checks for all ticks")
 
 
+def validate_remote_record(record: Any, case: str, origin: str) -> tuple[dict[str, Any], bytes, bytes]:
+    label = f"{origin}/{case}"
+    if not isinstance(record, dict):
+        raise RuntimeError(f"{label} must contain one JSON object")
+    if record.get("schema") != RECORD_SCHEMA or record.get("revision") != PIN:
+        raise RuntimeError(f"{label} has unexpected schema/revision")
+    if record.get("origin") != origin or record.get("case") != case:
+        raise RuntimeError(f"{label} origin/case mismatch")
+    checkpoint = CHECKPOINTS[case]
+    if record.get("checkpoint") != checkpoint:
+        raise RuntimeError(f"{label} checkpoint mismatch")
+    recording = decode_payload(record, "recording")
+    reference = decode_payload(record, "reference")
+    validate_embedded_capture(record.get("capture"), case, checkpoint, len(recording), len(reference))
+    full = record.get("full_trace")
+    if (not isinstance(full, dict) or full.get("states") != 4097 or full.get("block_states") != 512 or
+            type(full.get("bytes")) is not int or full["bytes"] <= 0 or
+            not isinstance(full.get("sha256"), str) or not re.fullmatch(r"[0-9a-f]{64}", full["sha256"]) or
+            not isinstance(full.get("block_sha256"), list) or len(full["block_sha256"]) != 9 or
+            any(not isinstance(item, str) or not re.fullmatch(r"[0-9a-f]{64}", item) for item in full["block_sha256"])):
+        raise RuntimeError(f"{label} full-trace metadata is malformed")
+    return record, recording, reference
+
+
+def receive(args: argparse.Namespace) -> int:
+    chunks = []
+    for index in range(CHUNK_COUNT):
+        name = f"PUBLIC_CHUNK_{index}"
+        value = os.environ.get(name)
+        if value is None:
+            raise RuntimeError(f"{name} is missing; all six chunk variables are required")
+        chunks.append(value)
+    serialized = join_transport_chunks(chunks, "PUBLIC_CHUNK")
+    try:
+        record = json.loads(serialized)
+    except json.JSONDecodeError as exc:
+        raise RuntimeError("received chunks do not form valid JSON") from exc
+    validated, recording, reference = validate_remote_record(record, args.case, args.origin)
+    encoded = serialized.encode("ascii")
+    target = ROOT / "stress-transfer" / args.case / f"{args.origin}.json"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    if target.exists():
+        raise RuntimeError("received-record destination already exists")
+    target.write_bytes(encoded)
+    print(json.dumps({"schema": "box3d-ci-stress-receive-v1", "case": args.case,
+                      "origin": args.origin, "record_json_bytes": len(encoded),
+                      "recording_bytes": len(recording), "recording_sha256": sha256(recording),
+                      "reference_bytes": len(reference), "reference_sha256": sha256(reference),
+                      "output_keys": [f"{args.case}_{index}" for index in range(CHUNK_COUNT)],
+                      "payload_stdout": False}, sort_keys=True, separators=(",", ":")))
+    return 0
+
+
 def load_remote_records(case: str) -> list[tuple[dict[str, Any], bytes, bytes]]:
     result = []
-    for env_name, origin in ORIGINS.items():
-        serialized = os.environ.get(env_name)
-        if not serialized:
-            raise RuntimeError(f"{env_name} is missing; all five producer origins are required")
-        if len(serialized) > RECORD_LIMIT:
-            raise RuntimeError(f"{env_name} exceeds the per-case JSON character limit")
+    for origin in ORIGINS.values():
+        path = ROOT / "stress-transfer" / case / f"{origin}.json"
+        if not path.is_file():
+            raise RuntimeError(f"received record is missing for {origin}/{case}")
+        if path.stat().st_size > RECORD_LIMIT:
+            raise RuntimeError(f"received record for {origin}/{case} exceeds its bound")
+        raw = path.read_bytes()
+        if not raw:
+            raise RuntimeError(f"received record for {origin}/{case} is empty")
         try:
+            serialized = raw.decode("ascii")
             record = json.loads(serialized)
-        except json.JSONDecodeError as exc:
-            raise RuntimeError(f"{env_name} is not a JSON object") from exc
-        if not isinstance(record, dict):
-            raise RuntimeError(f"{env_name} must contain one JSON object")
-        if record.get("schema") != RECORD_SCHEMA or record.get("revision") != PIN:
-            raise RuntimeError(f"{env_name} has unexpected schema/revision")
-        if record.get("origin") != origin or record.get("case") != case:
-            raise RuntimeError(f"{env_name} origin/case mismatch")
-        checkpoint = CHECKPOINTS[case]
-        if record.get("checkpoint") != checkpoint:
-            raise RuntimeError(f"{env_name} checkpoint mismatch")
-        recording = decode_payload(record, "recording")
-        reference = decode_payload(record, "reference")
-        capture = record.get("capture", {})
-        validate_embedded_capture(capture, case, checkpoint, len(recording), len(reference))
-        full = record.get("full_trace")
-        if (not isinstance(full, dict) or full.get("states") != 4097 or full.get("block_states") != 512 or
-                not isinstance(full.get("bytes"), int) or full["bytes"] <= 0 or
-                not isinstance(full.get("sha256"), str) or not re.fullmatch(r"[0-9a-f]{64}", full["sha256"]) or
-                not isinstance(full.get("block_sha256"), list) or len(full["block_sha256"]) != 9 or
-                any(not isinstance(item, str) or not re.fullmatch(r"[0-9a-f]{64}", item) for item in full["block_sha256"])):
-            raise RuntimeError(f"{env_name} full-trace metadata is malformed")
-        result.append((record, recording, reference))
+        except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+            raise RuntimeError(f"received record for {origin}/{case} is not ASCII JSON") from exc
+        result.append(validate_remote_record(record, case, origin))
     return result
 
 
@@ -636,6 +718,10 @@ def main() -> int:
     producer = sub.add_parser("produce", help="capture and export contacts, joints, and lifecycle records")
     common_build_args(producer, simd=False)
     producer.set_defaults(func=produce)
+    receiver = sub.add_parser("receive", help="validate one bounded public producer record into job-local storage")
+    receiver.add_argument("--case", choices=CASES, required=True)
+    receiver.add_argument("--origin", choices=tuple(ORIGINS.values()), required=True)
+    receiver.set_defaults(func=receive)
     consumer = sub.add_parser("consume", help="compare one public case against all five producer origins")
     common_build_args(consumer, simd=True)
     consumer.add_argument("--case", choices=CASES, required=True)
@@ -648,7 +734,8 @@ def main() -> int:
     soak.add_argument("--cycles", type=int, choices=(100,), default=100)
     soak.set_defaults(func=stress)
     args = parser.parse_args()
-    if args.parallel < 1 or args.timeout < 1 or (hasattr(args, "cycles") and args.cycles < 1):
+    if (getattr(args, "parallel", 1) < 1 or getattr(args, "timeout", 1) < 1 or
+            (hasattr(args, "cycles") and args.cycles < 1)):
         parser.error("parallel, timeout, and cycles must be positive")
     try:
         return args.func(args)

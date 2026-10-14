@@ -20,9 +20,24 @@ jobs:
     runs-on: windows-2022
     timeout-minutes: 20
     outputs:
-      contacts: ${{ steps.emit.outputs.contacts }}
-      joints: ${{ steps.emit.outputs.joints }}
-      lifecycle: ${{ steps.emit.outputs.lifecycle }}
+      contacts_0: ${{ steps.emit.outputs.contacts_0 }}
+      contacts_1: ${{ steps.emit.outputs.contacts_1 }}
+      contacts_2: ${{ steps.emit.outputs.contacts_2 }}
+      contacts_3: ${{ steps.emit.outputs.contacts_3 }}
+      contacts_4: ${{ steps.emit.outputs.contacts_4 }}
+      contacts_5: ${{ steps.emit.outputs.contacts_5 }}
+      joints_0: ${{ steps.emit.outputs.joints_0 }}
+      joints_1: ${{ steps.emit.outputs.joints_1 }}
+      joints_2: ${{ steps.emit.outputs.joints_2 }}
+      joints_3: ${{ steps.emit.outputs.joints_3 }}
+      joints_4: ${{ steps.emit.outputs.joints_4 }}
+      joints_5: ${{ steps.emit.outputs.joints_5 }}
+      lifecycle_0: ${{ steps.emit.outputs.lifecycle_0 }}
+      lifecycle_1: ${{ steps.emit.outputs.lifecycle_1 }}
+      lifecycle_2: ${{ steps.emit.outputs.lifecycle_2 }}
+      lifecycle_3: ${{ steps.emit.outputs.lifecycle_3 }}
+      lifecycle_4: ${{ steps.emit.outputs.lifecycle_4 }}
+      lifecycle_5: ${{ steps.emit.outputs.lifecycle_5 }}
     steps:
       - name: Checkout generic sources
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
@@ -55,9 +70,24 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     outputs:
-      contacts: ${{ steps.emit.outputs.contacts }}
-      joints: ${{ steps.emit.outputs.joints }}
-      lifecycle: ${{ steps.emit.outputs.lifecycle }}
+      contacts_0: ${{ steps.emit.outputs.contacts_0 }}
+      contacts_1: ${{ steps.emit.outputs.contacts_1 }}
+      contacts_2: ${{ steps.emit.outputs.contacts_2 }}
+      contacts_3: ${{ steps.emit.outputs.contacts_3 }}
+      contacts_4: ${{ steps.emit.outputs.contacts_4 }}
+      contacts_5: ${{ steps.emit.outputs.contacts_5 }}
+      joints_0: ${{ steps.emit.outputs.joints_0 }}
+      joints_1: ${{ steps.emit.outputs.joints_1 }}
+      joints_2: ${{ steps.emit.outputs.joints_2 }}
+      joints_3: ${{ steps.emit.outputs.joints_3 }}
+      joints_4: ${{ steps.emit.outputs.joints_4 }}
+      joints_5: ${{ steps.emit.outputs.joints_5 }}
+      lifecycle_0: ${{ steps.emit.outputs.lifecycle_0 }}
+      lifecycle_1: ${{ steps.emit.outputs.lifecycle_1 }}
+      lifecycle_2: ${{ steps.emit.outputs.lifecycle_2 }}
+      lifecycle_3: ${{ steps.emit.outputs.lifecycle_3 }}
+      lifecycle_4: ${{ steps.emit.outputs.lifecycle_4 }}
+      lifecycle_5: ${{ steps.emit.outputs.lifecycle_5 }}
     steps:
       - name: Checkout generic sources
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
@@ -90,9 +120,24 @@ jobs:
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 20
     outputs:
-      contacts: ${{ steps.emit.outputs.contacts }}
-      joints: ${{ steps.emit.outputs.joints }}
-      lifecycle: ${{ steps.emit.outputs.lifecycle }}
+      contacts_0: ${{ steps.emit.outputs.contacts_0 }}
+      contacts_1: ${{ steps.emit.outputs.contacts_1 }}
+      contacts_2: ${{ steps.emit.outputs.contacts_2 }}
+      contacts_3: ${{ steps.emit.outputs.contacts_3 }}
+      contacts_4: ${{ steps.emit.outputs.contacts_4 }}
+      contacts_5: ${{ steps.emit.outputs.contacts_5 }}
+      joints_0: ${{ steps.emit.outputs.joints_0 }}
+      joints_1: ${{ steps.emit.outputs.joints_1 }}
+      joints_2: ${{ steps.emit.outputs.joints_2 }}
+      joints_3: ${{ steps.emit.outputs.joints_3 }}
+      joints_4: ${{ steps.emit.outputs.joints_4 }}
+      joints_5: ${{ steps.emit.outputs.joints_5 }}
+      lifecycle_0: ${{ steps.emit.outputs.lifecycle_0 }}
+      lifecycle_1: ${{ steps.emit.outputs.lifecycle_1 }}
+      lifecycle_2: ${{ steps.emit.outputs.lifecycle_2 }}
+      lifecycle_3: ${{ steps.emit.outputs.lifecycle_3 }}
+      lifecycle_4: ${{ steps.emit.outputs.lifecycle_4 }}
+      lifecycle_5: ${{ steps.emit.outputs.lifecycle_5 }}
     steps:
       - name: Checkout generic sources
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
@@ -125,9 +170,24 @@ jobs:
     runs-on: macos-15
     timeout-minutes: 20
     outputs:
-      contacts: ${{ steps.emit.outputs.contacts }}
-      joints: ${{ steps.emit.outputs.joints }}
-      lifecycle: ${{ steps.emit.outputs.lifecycle }}
+      contacts_0: ${{ steps.emit.outputs.contacts_0 }}
+      contacts_1: ${{ steps.emit.outputs.contacts_1 }}
+      contacts_2: ${{ steps.emit.outputs.contacts_2 }}
+      contacts_3: ${{ steps.emit.outputs.contacts_3 }}
+      contacts_4: ${{ steps.emit.outputs.contacts_4 }}
+      contacts_5: ${{ steps.emit.outputs.contacts_5 }}
+      joints_0: ${{ steps.emit.outputs.joints_0 }}
+      joints_1: ${{ steps.emit.outputs.joints_1 }}
+      joints_2: ${{ steps.emit.outputs.joints_2 }}
+      joints_3: ${{ steps.emit.outputs.joints_3 }}
+      joints_4: ${{ steps.emit.outputs.joints_4 }}
+      joints_5: ${{ steps.emit.outputs.joints_5 }}
+      lifecycle_0: ${{ steps.emit.outputs.lifecycle_0 }}
+      lifecycle_1: ${{ steps.emit.outputs.lifecycle_1 }}
+      lifecycle_2: ${{ steps.emit.outputs.lifecycle_2 }}
+      lifecycle_3: ${{ steps.emit.outputs.lifecycle_3 }}
+      lifecycle_4: ${{ steps.emit.outputs.lifecycle_4 }}
+      lifecycle_5: ${{ steps.emit.outputs.lifecycle_5 }}
     steps:
       - name: Checkout generic sources
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
@@ -160,9 +220,24 @@ jobs:
     runs-on: macos-15-intel
     timeout-minutes: 20
     outputs:
-      contacts: ${{ steps.emit.outputs.contacts }}
-      joints: ${{ steps.emit.outputs.joints }}
-      lifecycle: ${{ steps.emit.outputs.lifecycle }}
+      contacts_0: ${{ steps.emit.outputs.contacts_0 }}
+      contacts_1: ${{ steps.emit.outputs.contacts_1 }}
+      contacts_2: ${{ steps.emit.outputs.contacts_2 }}
+      contacts_3: ${{ steps.emit.outputs.contacts_3 }}
+      contacts_4: ${{ steps.emit.outputs.contacts_4 }}
+      contacts_5: ${{ steps.emit.outputs.contacts_5 }}
+      joints_0: ${{ steps.emit.outputs.joints_0 }}
+      joints_1: ${{ steps.emit.outputs.joints_1 }}
+      joints_2: ${{ steps.emit.outputs.joints_2 }}
+      joints_3: ${{ steps.emit.outputs.joints_3 }}
+      joints_4: ${{ steps.emit.outputs.joints_4 }}
+      joints_5: ${{ steps.emit.outputs.joints_5 }}
+      lifecycle_0: ${{ steps.emit.outputs.lifecycle_0 }}
+      lifecycle_1: ${{ steps.emit.outputs.lifecycle_1 }}
+      lifecycle_2: ${{ steps.emit.outputs.lifecycle_2 }}
+      lifecycle_3: ${{ steps.emit.outputs.lifecycle_3 }}
+      lifecycle_4: ${{ steps.emit.outputs.lifecycle_4 }}
+      lifecycle_5: ${{ steps.emit.outputs.lifecycle_5 }}
     steps:
       - name: Checkout generic sources
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
@@ -707,42 +782,234 @@ jobs:
         run: |
           import subprocess
           subprocess.run(['python','ci.py','inventory','--expected-arch','${{ matrix.arch }}'],check=True)
+      - name: Receive contacts from windows-msvc-x64
+        id: receive_contacts_windows
+        continue-on-error: true
+        shell: python
+        env:
+          PUBLIC_CHUNK_0: ${{ needs.capture_windows.outputs.contacts_0 }}
+          PUBLIC_CHUNK_1: ${{ needs.capture_windows.outputs.contacts_1 }}
+          PUBLIC_CHUNK_2: ${{ needs.capture_windows.outputs.contacts_2 }}
+          PUBLIC_CHUNK_3: ${{ needs.capture_windows.outputs.contacts_3 }}
+          PUBLIC_CHUNK_4: ${{ needs.capture_windows.outputs.contacts_4 }}
+          PUBLIC_CHUNK_5: ${{ needs.capture_windows.outputs.contacts_5 }}
+        run: |
+          import subprocess
+          subprocess.run(["python", "stress_ci.py", "receive", "--case", "contacts", "--origin", "windows-msvc-x64"],check=True)
+      - name: Receive contacts from linux-gcc-x64
+        id: receive_contacts_linux_x64
+        continue-on-error: true
+        shell: python
+        env:
+          PUBLIC_CHUNK_0: ${{ needs.capture_linux_x64.outputs.contacts_0 }}
+          PUBLIC_CHUNK_1: ${{ needs.capture_linux_x64.outputs.contacts_1 }}
+          PUBLIC_CHUNK_2: ${{ needs.capture_linux_x64.outputs.contacts_2 }}
+          PUBLIC_CHUNK_3: ${{ needs.capture_linux_x64.outputs.contacts_3 }}
+          PUBLIC_CHUNK_4: ${{ needs.capture_linux_x64.outputs.contacts_4 }}
+          PUBLIC_CHUNK_5: ${{ needs.capture_linux_x64.outputs.contacts_5 }}
+        run: |
+          import subprocess
+          subprocess.run(["python", "stress_ci.py", "receive", "--case", "contacts", "--origin", "linux-gcc-x64"],check=True)
+      - name: Receive contacts from linux-clang-arm64
+        id: receive_contacts_linux_arm64
+        continue-on-error: true
+        shell: python
+        env:
+          PUBLIC_CHUNK_0: ${{ needs.capture_linux_arm64.outputs.contacts_0 }}
+          PUBLIC_CHUNK_1: ${{ needs.capture_linux_arm64.outputs.contacts_1 }}
+          PUBLIC_CHUNK_2: ${{ needs.capture_linux_arm64.outputs.contacts_2 }}
+          PUBLIC_CHUNK_3: ${{ needs.capture_linux_arm64.outputs.contacts_3 }}
+          PUBLIC_CHUNK_4: ${{ needs.capture_linux_arm64.outputs.contacts_4 }}
+          PUBLIC_CHUNK_5: ${{ needs.capture_linux_arm64.outputs.contacts_5 }}
+        run: |
+          import subprocess
+          subprocess.run(["python", "stress_ci.py", "receive", "--case", "contacts", "--origin", "linux-clang-arm64"],check=True)
+      - name: Receive contacts from macos-clang-arm64
+        id: receive_contacts_macos_arm64
+        continue-on-error: true
+        shell: python
+        env:
+          PUBLIC_CHUNK_0: ${{ needs.capture_macos_arm64.outputs.contacts_0 }}
+          PUBLIC_CHUNK_1: ${{ needs.capture_macos_arm64.outputs.contacts_1 }}
+          PUBLIC_CHUNK_2: ${{ needs.capture_macos_arm64.outputs.contacts_2 }}
+          PUBLIC_CHUNK_3: ${{ needs.capture_macos_arm64.outputs.contacts_3 }}
+          PUBLIC_CHUNK_4: ${{ needs.capture_macos_arm64.outputs.contacts_4 }}
+          PUBLIC_CHUNK_5: ${{ needs.capture_macos_arm64.outputs.contacts_5 }}
+        run: |
+          import subprocess
+          subprocess.run(["python", "stress_ci.py", "receive", "--case", "contacts", "--origin", "macos-clang-arm64"],check=True)
+      - name: Receive contacts from macos-clang-x64
+        id: receive_contacts_macos_intel
+        continue-on-error: true
+        shell: python
+        env:
+          PUBLIC_CHUNK_0: ${{ needs.capture_macos_intel.outputs.contacts_0 }}
+          PUBLIC_CHUNK_1: ${{ needs.capture_macos_intel.outputs.contacts_1 }}
+          PUBLIC_CHUNK_2: ${{ needs.capture_macos_intel.outputs.contacts_2 }}
+          PUBLIC_CHUNK_3: ${{ needs.capture_macos_intel.outputs.contacts_3 }}
+          PUBLIC_CHUNK_4: ${{ needs.capture_macos_intel.outputs.contacts_4 }}
+          PUBLIC_CHUNK_5: ${{ needs.capture_macos_intel.outputs.contacts_5 }}
+        run: |
+          import subprocess
+          subprocess.run(["python", "stress_ci.py", "receive", "--case", "contacts", "--origin", "macos-clang-x64"],check=True)
       - name: Replay exact contacts records from all five origins
         id: case_contacts
         continue-on-error: true
         shell: python
-        env:
-          PUBLIC_RECORD_WINDOWS: ${{ needs.capture_windows.outputs.contacts }}
-          PUBLIC_RECORD_LINUX_X64: ${{ needs.capture_linux_x64.outputs.contacts }}
-          PUBLIC_RECORD_LINUX_ARM64: ${{ needs.capture_linux_arm64.outputs.contacts }}
-          PUBLIC_RECORD_MACOS_ARM64: ${{ needs.capture_macos_arm64.outputs.contacts }}
-          PUBLIC_RECORD_MACOS_INTEL: ${{ needs.capture_macos_intel.outputs.contacts }}
         run: |
           import subprocess
           subprocess.run(["python", "stress_ci.py", "consume", "--case", "contacts", "--compiler", "${{ matrix.compiler }}", "--config", "${{ matrix.config }}", "--simd", "${{ matrix.simd }}", "--workers", "${{ matrix.workers }}", "--cycles", "4", "--build", "stress-build"],check=True)
+      - name: Receive joints from windows-msvc-x64
+        id: receive_joints_windows
+        continue-on-error: true
+        shell: python
+        env:
+          PUBLIC_CHUNK_0: ${{ needs.capture_windows.outputs.joints_0 }}
+          PUBLIC_CHUNK_1: ${{ needs.capture_windows.outputs.joints_1 }}
+          PUBLIC_CHUNK_2: ${{ needs.capture_windows.outputs.joints_2 }}
+          PUBLIC_CHUNK_3: ${{ needs.capture_windows.outputs.joints_3 }}
+          PUBLIC_CHUNK_4: ${{ needs.capture_windows.outputs.joints_4 }}
+          PUBLIC_CHUNK_5: ${{ needs.capture_windows.outputs.joints_5 }}
+        run: |
+          import subprocess
+          subprocess.run(["python", "stress_ci.py", "receive", "--case", "joints", "--origin", "windows-msvc-x64"],check=True)
+      - name: Receive joints from linux-gcc-x64
+        id: receive_joints_linux_x64
+        continue-on-error: true
+        shell: python
+        env:
+          PUBLIC_CHUNK_0: ${{ needs.capture_linux_x64.outputs.joints_0 }}
+          PUBLIC_CHUNK_1: ${{ needs.capture_linux_x64.outputs.joints_1 }}
+          PUBLIC_CHUNK_2: ${{ needs.capture_linux_x64.outputs.joints_2 }}
+          PUBLIC_CHUNK_3: ${{ needs.capture_linux_x64.outputs.joints_3 }}
+          PUBLIC_CHUNK_4: ${{ needs.capture_linux_x64.outputs.joints_4 }}
+          PUBLIC_CHUNK_5: ${{ needs.capture_linux_x64.outputs.joints_5 }}
+        run: |
+          import subprocess
+          subprocess.run(["python", "stress_ci.py", "receive", "--case", "joints", "--origin", "linux-gcc-x64"],check=True)
+      - name: Receive joints from linux-clang-arm64
+        id: receive_joints_linux_arm64
+        continue-on-error: true
+        shell: python
+        env:
+          PUBLIC_CHUNK_0: ${{ needs.capture_linux_arm64.outputs.joints_0 }}
+          PUBLIC_CHUNK_1: ${{ needs.capture_linux_arm64.outputs.joints_1 }}
+          PUBLIC_CHUNK_2: ${{ needs.capture_linux_arm64.outputs.joints_2 }}
+          PUBLIC_CHUNK_3: ${{ needs.capture_linux_arm64.outputs.joints_3 }}
+          PUBLIC_CHUNK_4: ${{ needs.capture_linux_arm64.outputs.joints_4 }}
+          PUBLIC_CHUNK_5: ${{ needs.capture_linux_arm64.outputs.joints_5 }}
+        run: |
+          import subprocess
+          subprocess.run(["python", "stress_ci.py", "receive", "--case", "joints", "--origin", "linux-clang-arm64"],check=True)
+      - name: Receive joints from macos-clang-arm64
+        id: receive_joints_macos_arm64
+        continue-on-error: true
+        shell: python
+        env:
+          PUBLIC_CHUNK_0: ${{ needs.capture_macos_arm64.outputs.joints_0 }}
+          PUBLIC_CHUNK_1: ${{ needs.capture_macos_arm64.outputs.joints_1 }}
+          PUBLIC_CHUNK_2: ${{ needs.capture_macos_arm64.outputs.joints_2 }}
+          PUBLIC_CHUNK_3: ${{ needs.capture_macos_arm64.outputs.joints_3 }}
+          PUBLIC_CHUNK_4: ${{ needs.capture_macos_arm64.outputs.joints_4 }}
+          PUBLIC_CHUNK_5: ${{ needs.capture_macos_arm64.outputs.joints_5 }}
+        run: |
+          import subprocess
+          subprocess.run(["python", "stress_ci.py", "receive", "--case", "joints", "--origin", "macos-clang-arm64"],check=True)
+      - name: Receive joints from macos-clang-x64
+        id: receive_joints_macos_intel
+        continue-on-error: true
+        shell: python
+        env:
+          PUBLIC_CHUNK_0: ${{ needs.capture_macos_intel.outputs.joints_0 }}
+          PUBLIC_CHUNK_1: ${{ needs.capture_macos_intel.outputs.joints_1 }}
+          PUBLIC_CHUNK_2: ${{ needs.capture_macos_intel.outputs.joints_2 }}
+          PUBLIC_CHUNK_3: ${{ needs.capture_macos_intel.outputs.joints_3 }}
+          PUBLIC_CHUNK_4: ${{ needs.capture_macos_intel.outputs.joints_4 }}
+          PUBLIC_CHUNK_5: ${{ needs.capture_macos_intel.outputs.joints_5 }}
+        run: |
+          import subprocess
+          subprocess.run(["python", "stress_ci.py", "receive", "--case", "joints", "--origin", "macos-clang-x64"],check=True)
       - name: Replay exact joints records from all five origins
         id: case_joints
         continue-on-error: true
         shell: python
-        env:
-          PUBLIC_RECORD_WINDOWS: ${{ needs.capture_windows.outputs.joints }}
-          PUBLIC_RECORD_LINUX_X64: ${{ needs.capture_linux_x64.outputs.joints }}
-          PUBLIC_RECORD_LINUX_ARM64: ${{ needs.capture_linux_arm64.outputs.joints }}
-          PUBLIC_RECORD_MACOS_ARM64: ${{ needs.capture_macos_arm64.outputs.joints }}
-          PUBLIC_RECORD_MACOS_INTEL: ${{ needs.capture_macos_intel.outputs.joints }}
         run: |
           import subprocess
           subprocess.run(["python", "stress_ci.py", "consume", "--case", "joints", "--compiler", "${{ matrix.compiler }}", "--config", "${{ matrix.config }}", "--simd", "${{ matrix.simd }}", "--workers", "${{ matrix.workers }}", "--cycles", "4", "--build", "stress-build"],check=True)
+      - name: Receive lifecycle from windows-msvc-x64
+        id: receive_lifecycle_windows
+        continue-on-error: true
+        shell: python
+        env:
+          PUBLIC_CHUNK_0: ${{ needs.capture_windows.outputs.lifecycle_0 }}
+          PUBLIC_CHUNK_1: ${{ needs.capture_windows.outputs.lifecycle_1 }}
+          PUBLIC_CHUNK_2: ${{ needs.capture_windows.outputs.lifecycle_2 }}
+          PUBLIC_CHUNK_3: ${{ needs.capture_windows.outputs.lifecycle_3 }}
+          PUBLIC_CHUNK_4: ${{ needs.capture_windows.outputs.lifecycle_4 }}
+          PUBLIC_CHUNK_5: ${{ needs.capture_windows.outputs.lifecycle_5 }}
+        run: |
+          import subprocess
+          subprocess.run(["python", "stress_ci.py", "receive", "--case", "lifecycle", "--origin", "windows-msvc-x64"],check=True)
+      - name: Receive lifecycle from linux-gcc-x64
+        id: receive_lifecycle_linux_x64
+        continue-on-error: true
+        shell: python
+        env:
+          PUBLIC_CHUNK_0: ${{ needs.capture_linux_x64.outputs.lifecycle_0 }}
+          PUBLIC_CHUNK_1: ${{ needs.capture_linux_x64.outputs.lifecycle_1 }}
+          PUBLIC_CHUNK_2: ${{ needs.capture_linux_x64.outputs.lifecycle_2 }}
+          PUBLIC_CHUNK_3: ${{ needs.capture_linux_x64.outputs.lifecycle_3 }}
+          PUBLIC_CHUNK_4: ${{ needs.capture_linux_x64.outputs.lifecycle_4 }}
+          PUBLIC_CHUNK_5: ${{ needs.capture_linux_x64.outputs.lifecycle_5 }}
+        run: |
+          import subprocess
+          subprocess.run(["python", "stress_ci.py", "receive", "--case", "lifecycle", "--origin", "linux-gcc-x64"],check=True)
+      - name: Receive lifecycle from linux-clang-arm64
+        id: receive_lifecycle_linux_arm64
+        continue-on-error: true
+        shell: python
+        env:
+          PUBLIC_CHUNK_0: ${{ needs.capture_linux_arm64.outputs.lifecycle_0 }}
+          PUBLIC_CHUNK_1: ${{ needs.capture_linux_arm64.outputs.lifecycle_1 }}
+          PUBLIC_CHUNK_2: ${{ needs.capture_linux_arm64.outputs.lifecycle_2 }}
+          PUBLIC_CHUNK_3: ${{ needs.capture_linux_arm64.outputs.lifecycle_3 }}
+          PUBLIC_CHUNK_4: ${{ needs.capture_linux_arm64.outputs.lifecycle_4 }}
+          PUBLIC_CHUNK_5: ${{ needs.capture_linux_arm64.outputs.lifecycle_5 }}
+        run: |
+          import subprocess
+          subprocess.run(["python", "stress_ci.py", "receive", "--case", "lifecycle", "--origin", "linux-clang-arm64"],check=True)
+      - name: Receive lifecycle from macos-clang-arm64
+        id: receive_lifecycle_macos_arm64
+        continue-on-error: true
+        shell: python
+        env:
+          PUBLIC_CHUNK_0: ${{ needs.capture_macos_arm64.outputs.lifecycle_0 }}
+          PUBLIC_CHUNK_1: ${{ needs.capture_macos_arm64.outputs.lifecycle_1 }}
+          PUBLIC_CHUNK_2: ${{ needs.capture_macos_arm64.outputs.lifecycle_2 }}
+          PUBLIC_CHUNK_3: ${{ needs.capture_macos_arm64.outputs.lifecycle_3 }}
+          PUBLIC_CHUNK_4: ${{ needs.capture_macos_arm64.outputs.lifecycle_4 }}
+          PUBLIC_CHUNK_5: ${{ needs.capture_macos_arm64.outputs.lifecycle_5 }}
+        run: |
+          import subprocess
+          subprocess.run(["python", "stress_ci.py", "receive", "--case", "lifecycle", "--origin", "macos-clang-arm64"],check=True)
+      - name: Receive lifecycle from macos-clang-x64
+        id: receive_lifecycle_macos_intel
+        continue-on-error: true
+        shell: python
+        env:
+          PUBLIC_CHUNK_0: ${{ needs.capture_macos_intel.outputs.lifecycle_0 }}
+          PUBLIC_CHUNK_1: ${{ needs.capture_macos_intel.outputs.lifecycle_1 }}
+          PUBLIC_CHUNK_2: ${{ needs.capture_macos_intel.outputs.lifecycle_2 }}
+          PUBLIC_CHUNK_3: ${{ needs.capture_macos_intel.outputs.lifecycle_3 }}
+          PUBLIC_CHUNK_4: ${{ needs.capture_macos_intel.outputs.lifecycle_4 }}
+          PUBLIC_CHUNK_5: ${{ needs.capture_macos_intel.outputs.lifecycle_5 }}
+        run: |
+          import subprocess
+          subprocess.run(["python", "stress_ci.py", "receive", "--case", "lifecycle", "--origin", "macos-clang-x64"],check=True)
       - name: Replay exact lifecycle records from all five origins
         id: case_lifecycle
         continue-on-error: true
         shell: python
-        env:
-          PUBLIC_RECORD_WINDOWS: ${{ needs.capture_windows.outputs.lifecycle }}
-          PUBLIC_RECORD_LINUX_X64: ${{ needs.capture_linux_x64.outputs.lifecycle }}
-          PUBLIC_RECORD_LINUX_ARM64: ${{ needs.capture_linux_arm64.outputs.lifecycle }}
-          PUBLIC_RECORD_MACOS_ARM64: ${{ needs.capture_macos_arm64.outputs.lifecycle }}
-          PUBLIC_RECORD_MACOS_INTEL: ${{ needs.capture_macos_intel.outputs.lifecycle }}
         run: |
           import subprocess
           subprocess.run(["python", "stress_ci.py", "consume", "--case", "lifecycle", "--compiler", "${{ matrix.compiler }}", "--config", "${{ matrix.config }}", "--simd", "${{ matrix.simd }}", "--workers", "${{ matrix.workers }}", "--cycles", "4", "--build", "stress-build"],check=True)
@@ -751,6 +1018,270 @@ jobs:
         shell: python
         run: |
           outcomes=['${{ steps.case_contacts.outcome }}','${{ steps.case_joints.outcome }}','${{ steps.case_lifecycle.outcome }}']
-          print({'case_step_outcomes':outcomes})
-          if outcomes!=['success','success','success']:
+          receives=['${{ steps.receive_contacts_windows.outcome }}', '${{ steps.receive_contacts_linux_x64.outcome }}', '${{ steps.receive_contacts_linux_arm64.outcome }}', '${{ steps.receive_contacts_macos_arm64.outcome }}', '${{ steps.receive_contacts_macos_intel.outcome }}', '${{ steps.receive_joints_windows.outcome }}', '${{ steps.receive_joints_linux_x64.outcome }}', '${{ steps.receive_joints_linux_arm64.outcome }}', '${{ steps.receive_joints_macos_arm64.outcome }}', '${{ steps.receive_joints_macos_intel.outcome }}', '${{ steps.receive_lifecycle_windows.outcome }}', '${{ steps.receive_lifecycle_linux_x64.outcome }}', '${{ steps.receive_lifecycle_linux_arm64.outcome }}', '${{ steps.receive_lifecycle_macos_arm64.outcome }}', '${{ steps.receive_lifecycle_macos_intel.outcome }}']
+          print({'case_step_outcomes':outcomes,'receive_step_outcomes':receives})
+          if outcomes!=['success','success','success'] or receives!=['success']*15:
+              raise SystemExit(1)
+  smoke_consume:
+    if: github.event.repository.visibility == 'public' && inputs.mode == 'smoke'
+    needs: [capture_windows, capture_linux_x64, capture_linux_arm64, capture_macos_arm64, capture_macos_intel]
+    name: Smoke cross-host / windows-msvc-x64 / RelWithDebInfo / workers4 / AVX2OFF
+    runs-on: windows-2022
+    timeout-minutes: 25
+    steps:
+      - name: Checkout generic sources
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {fetch-depth: 1, persist-credentials: false}
+      - name: Checkout unchanged upstream
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: erincatto/box3d
+          ref: 5d83df83ab47172c2c745b44315e7538ead02397
+          path: upstream
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Observe CPU and architecture
+        shell: python
+        run: |
+          import subprocess
+          subprocess.run(['python','ci.py','inventory','--expected-arch','x86_64'],check=True)
+      - name: Receive contacts from windows-msvc-x64
+        id: receive_contacts_windows
+        continue-on-error: true
+        shell: python
+        env:
+          PUBLIC_CHUNK_0: ${{ needs.capture_windows.outputs.contacts_0 }}
+          PUBLIC_CHUNK_1: ${{ needs.capture_windows.outputs.contacts_1 }}
+          PUBLIC_CHUNK_2: ${{ needs.capture_windows.outputs.contacts_2 }}
+          PUBLIC_CHUNK_3: ${{ needs.capture_windows.outputs.contacts_3 }}
+          PUBLIC_CHUNK_4: ${{ needs.capture_windows.outputs.contacts_4 }}
+          PUBLIC_CHUNK_5: ${{ needs.capture_windows.outputs.contacts_5 }}
+        run: |
+          import subprocess
+          subprocess.run(["python", "stress_ci.py", "receive", "--case", "contacts", "--origin", "windows-msvc-x64"],check=True)
+      - name: Receive contacts from linux-gcc-x64
+        id: receive_contacts_linux_x64
+        continue-on-error: true
+        shell: python
+        env:
+          PUBLIC_CHUNK_0: ${{ needs.capture_linux_x64.outputs.contacts_0 }}
+          PUBLIC_CHUNK_1: ${{ needs.capture_linux_x64.outputs.contacts_1 }}
+          PUBLIC_CHUNK_2: ${{ needs.capture_linux_x64.outputs.contacts_2 }}
+          PUBLIC_CHUNK_3: ${{ needs.capture_linux_x64.outputs.contacts_3 }}
+          PUBLIC_CHUNK_4: ${{ needs.capture_linux_x64.outputs.contacts_4 }}
+          PUBLIC_CHUNK_5: ${{ needs.capture_linux_x64.outputs.contacts_5 }}
+        run: |
+          import subprocess
+          subprocess.run(["python", "stress_ci.py", "receive", "--case", "contacts", "--origin", "linux-gcc-x64"],check=True)
+      - name: Receive contacts from linux-clang-arm64
+        id: receive_contacts_linux_arm64
+        continue-on-error: true
+        shell: python
+        env:
+          PUBLIC_CHUNK_0: ${{ needs.capture_linux_arm64.outputs.contacts_0 }}
+          PUBLIC_CHUNK_1: ${{ needs.capture_linux_arm64.outputs.contacts_1 }}
+          PUBLIC_CHUNK_2: ${{ needs.capture_linux_arm64.outputs.contacts_2 }}
+          PUBLIC_CHUNK_3: ${{ needs.capture_linux_arm64.outputs.contacts_3 }}
+          PUBLIC_CHUNK_4: ${{ needs.capture_linux_arm64.outputs.contacts_4 }}
+          PUBLIC_CHUNK_5: ${{ needs.capture_linux_arm64.outputs.contacts_5 }}
+        run: |
+          import subprocess
+          subprocess.run(["python", "stress_ci.py", "receive", "--case", "contacts", "--origin", "linux-clang-arm64"],check=True)
+      - name: Receive contacts from macos-clang-arm64
+        id: receive_contacts_macos_arm64
+        continue-on-error: true
+        shell: python
+        env:
+          PUBLIC_CHUNK_0: ${{ needs.capture_macos_arm64.outputs.contacts_0 }}
+          PUBLIC_CHUNK_1: ${{ needs.capture_macos_arm64.outputs.contacts_1 }}
+          PUBLIC_CHUNK_2: ${{ needs.capture_macos_arm64.outputs.contacts_2 }}
+          PUBLIC_CHUNK_3: ${{ needs.capture_macos_arm64.outputs.contacts_3 }}
+          PUBLIC_CHUNK_4: ${{ needs.capture_macos_arm64.outputs.contacts_4 }}
+          PUBLIC_CHUNK_5: ${{ needs.capture_macos_arm64.outputs.contacts_5 }}
+        run: |
+          import subprocess
+          subprocess.run(["python", "stress_ci.py", "receive", "--case", "contacts", "--origin", "macos-clang-arm64"],check=True)
+      - name: Receive contacts from macos-clang-x64
+        id: receive_contacts_macos_intel
+        continue-on-error: true
+        shell: python
+        env:
+          PUBLIC_CHUNK_0: ${{ needs.capture_macos_intel.outputs.contacts_0 }}
+          PUBLIC_CHUNK_1: ${{ needs.capture_macos_intel.outputs.contacts_1 }}
+          PUBLIC_CHUNK_2: ${{ needs.capture_macos_intel.outputs.contacts_2 }}
+          PUBLIC_CHUNK_3: ${{ needs.capture_macos_intel.outputs.contacts_3 }}
+          PUBLIC_CHUNK_4: ${{ needs.capture_macos_intel.outputs.contacts_4 }}
+          PUBLIC_CHUNK_5: ${{ needs.capture_macos_intel.outputs.contacts_5 }}
+        run: |
+          import subprocess
+          subprocess.run(["python", "stress_ci.py", "receive", "--case", "contacts", "--origin", "macos-clang-x64"],check=True)
+      - name: Replay exact contacts records from all five origins
+        id: case_contacts
+        continue-on-error: true
+        shell: python
+        run: |
+          import subprocess
+          subprocess.run(["python", "stress_ci.py", "consume", "--case", "contacts", "--compiler", "msvc", "--config", "RelWithDebInfo", "--simd", "4", "--workers", "4", "--cycles", "4", "--build", "stress-build"],check=True)
+      - name: Receive joints from windows-msvc-x64
+        id: receive_joints_windows
+        continue-on-error: true
+        shell: python
+        env:
+          PUBLIC_CHUNK_0: ${{ needs.capture_windows.outputs.joints_0 }}
+          PUBLIC_CHUNK_1: ${{ needs.capture_windows.outputs.joints_1 }}
+          PUBLIC_CHUNK_2: ${{ needs.capture_windows.outputs.joints_2 }}
+          PUBLIC_CHUNK_3: ${{ needs.capture_windows.outputs.joints_3 }}
+          PUBLIC_CHUNK_4: ${{ needs.capture_windows.outputs.joints_4 }}
+          PUBLIC_CHUNK_5: ${{ needs.capture_windows.outputs.joints_5 }}
+        run: |
+          import subprocess
+          subprocess.run(["python", "stress_ci.py", "receive", "--case", "joints", "--origin", "windows-msvc-x64"],check=True)
+      - name: Receive joints from linux-gcc-x64
+        id: receive_joints_linux_x64
+        continue-on-error: true
+        shell: python
+        env:
+          PUBLIC_CHUNK_0: ${{ needs.capture_linux_x64.outputs.joints_0 }}
+          PUBLIC_CHUNK_1: ${{ needs.capture_linux_x64.outputs.joints_1 }}
+          PUBLIC_CHUNK_2: ${{ needs.capture_linux_x64.outputs.joints_2 }}
+          PUBLIC_CHUNK_3: ${{ needs.capture_linux_x64.outputs.joints_3 }}
+          PUBLIC_CHUNK_4: ${{ needs.capture_linux_x64.outputs.joints_4 }}
+          PUBLIC_CHUNK_5: ${{ needs.capture_linux_x64.outputs.joints_5 }}
+        run: |
+          import subprocess
+          subprocess.run(["python", "stress_ci.py", "receive", "--case", "joints", "--origin", "linux-gcc-x64"],check=True)
+      - name: Receive joints from linux-clang-arm64
+        id: receive_joints_linux_arm64
+        continue-on-error: true
+        shell: python
+        env:
+          PUBLIC_CHUNK_0: ${{ needs.capture_linux_arm64.outputs.joints_0 }}
+          PUBLIC_CHUNK_1: ${{ needs.capture_linux_arm64.outputs.joints_1 }}
+          PUBLIC_CHUNK_2: ${{ needs.capture_linux_arm64.outputs.joints_2 }}
+          PUBLIC_CHUNK_3: ${{ needs.capture_linux_arm64.outputs.joints_3 }}
+          PUBLIC_CHUNK_4: ${{ needs.capture_linux_arm64.outputs.joints_4 }}
+          PUBLIC_CHUNK_5: ${{ needs.capture_linux_arm64.outputs.joints_5 }}
+        run: |
+          import subprocess
+          subprocess.run(["python", "stress_ci.py", "receive", "--case", "joints", "--origin", "linux-clang-arm64"],check=True)
+      - name: Receive joints from macos-clang-arm64
+        id: receive_joints_macos_arm64
+        continue-on-error: true
+        shell: python
+        env:
+          PUBLIC_CHUNK_0: ${{ needs.capture_macos_arm64.outputs.joints_0 }}
+          PUBLIC_CHUNK_1: ${{ needs.capture_macos_arm64.outputs.joints_1 }}
+          PUBLIC_CHUNK_2: ${{ needs.capture_macos_arm64.outputs.joints_2 }}
+          PUBLIC_CHUNK_3: ${{ needs.capture_macos_arm64.outputs.joints_3 }}
+          PUBLIC_CHUNK_4: ${{ needs.capture_macos_arm64.outputs.joints_4 }}
+          PUBLIC_CHUNK_5: ${{ needs.capture_macos_arm64.outputs.joints_5 }}
+        run: |
+          import subprocess
+          subprocess.run(["python", "stress_ci.py", "receive", "--case", "joints", "--origin", "macos-clang-arm64"],check=True)
+      - name: Receive joints from macos-clang-x64
+        id: receive_joints_macos_intel
+        continue-on-error: true
+        shell: python
+        env:
+          PUBLIC_CHUNK_0: ${{ needs.capture_macos_intel.outputs.joints_0 }}
+          PUBLIC_CHUNK_1: ${{ needs.capture_macos_intel.outputs.joints_1 }}
+          PUBLIC_CHUNK_2: ${{ needs.capture_macos_intel.outputs.joints_2 }}
+          PUBLIC_CHUNK_3: ${{ needs.capture_macos_intel.outputs.joints_3 }}
+          PUBLIC_CHUNK_4: ${{ needs.capture_macos_intel.outputs.joints_4 }}
+          PUBLIC_CHUNK_5: ${{ needs.capture_macos_intel.outputs.joints_5 }}
+        run: |
+          import subprocess
+          subprocess.run(["python", "stress_ci.py", "receive", "--case", "joints", "--origin", "macos-clang-x64"],check=True)
+      - name: Replay exact joints records from all five origins
+        id: case_joints
+        continue-on-error: true
+        shell: python
+        run: |
+          import subprocess
+          subprocess.run(["python", "stress_ci.py", "consume", "--case", "joints", "--compiler", "msvc", "--config", "RelWithDebInfo", "--simd", "4", "--workers", "4", "--cycles", "4", "--build", "stress-build"],check=True)
+      - name: Receive lifecycle from windows-msvc-x64
+        id: receive_lifecycle_windows
+        continue-on-error: true
+        shell: python
+        env:
+          PUBLIC_CHUNK_0: ${{ needs.capture_windows.outputs.lifecycle_0 }}
+          PUBLIC_CHUNK_1: ${{ needs.capture_windows.outputs.lifecycle_1 }}
+          PUBLIC_CHUNK_2: ${{ needs.capture_windows.outputs.lifecycle_2 }}
+          PUBLIC_CHUNK_3: ${{ needs.capture_windows.outputs.lifecycle_3 }}
+          PUBLIC_CHUNK_4: ${{ needs.capture_windows.outputs.lifecycle_4 }}
+          PUBLIC_CHUNK_5: ${{ needs.capture_windows.outputs.lifecycle_5 }}
+        run: |
+          import subprocess
+          subprocess.run(["python", "stress_ci.py", "receive", "--case", "lifecycle", "--origin", "windows-msvc-x64"],check=True)
+      - name: Receive lifecycle from linux-gcc-x64
+        id: receive_lifecycle_linux_x64
+        continue-on-error: true
+        shell: python
+        env:
+          PUBLIC_CHUNK_0: ${{ needs.capture_linux_x64.outputs.lifecycle_0 }}
+          PUBLIC_CHUNK_1: ${{ needs.capture_linux_x64.outputs.lifecycle_1 }}
+          PUBLIC_CHUNK_2: ${{ needs.capture_linux_x64.outputs.lifecycle_2 }}
+          PUBLIC_CHUNK_3: ${{ needs.capture_linux_x64.outputs.lifecycle_3 }}
+          PUBLIC_CHUNK_4: ${{ needs.capture_linux_x64.outputs.lifecycle_4 }}
+          PUBLIC_CHUNK_5: ${{ needs.capture_linux_x64.outputs.lifecycle_5 }}
+        run: |
+          import subprocess
+          subprocess.run(["python", "stress_ci.py", "receive", "--case", "lifecycle", "--origin", "linux-gcc-x64"],check=True)
+      - name: Receive lifecycle from linux-clang-arm64
+        id: receive_lifecycle_linux_arm64
+        continue-on-error: true
+        shell: python
+        env:
+          PUBLIC_CHUNK_0: ${{ needs.capture_linux_arm64.outputs.lifecycle_0 }}
+          PUBLIC_CHUNK_1: ${{ needs.capture_linux_arm64.outputs.lifecycle_1 }}
+          PUBLIC_CHUNK_2: ${{ needs.capture_linux_arm64.outputs.lifecycle_2 }}
+          PUBLIC_CHUNK_3: ${{ needs.capture_linux_arm64.outputs.lifecycle_3 }}
+          PUBLIC_CHUNK_4: ${{ needs.capture_linux_arm64.outputs.lifecycle_4 }}
+          PUBLIC_CHUNK_5: ${{ needs.capture_linux_arm64.outputs.lifecycle_5 }}
+        run: |
+          import subprocess
+          subprocess.run(["python", "stress_ci.py", "receive", "--case", "lifecycle", "--origin", "linux-clang-arm64"],check=True)
+      - name: Receive lifecycle from macos-clang-arm64
+        id: receive_lifecycle_macos_arm64
+        continue-on-error: true
+        shell: python
+        env:
+          PUBLIC_CHUNK_0: ${{ needs.capture_macos_arm64.outputs.lifecycle_0 }}
+          PUBLIC_CHUNK_1: ${{ needs.capture_macos_arm64.outputs.lifecycle_1 }}
+          PUBLIC_CHUNK_2: ${{ needs.capture_macos_arm64.outputs.lifecycle_2 }}
+          PUBLIC_CHUNK_3: ${{ needs.capture_macos_arm64.outputs.lifecycle_3 }}
+          PUBLIC_CHUNK_4: ${{ needs.capture_macos_arm64.outputs.lifecycle_4 }}
+          PUBLIC_CHUNK_5: ${{ needs.capture_macos_arm64.outputs.lifecycle_5 }}
+        run: |
+          import subprocess
+          subprocess.run(["python", "stress_ci.py", "receive", "--case", "lifecycle", "--origin", "macos-clang-arm64"],check=True)
+      - name: Receive lifecycle from macos-clang-x64
+        id: receive_lifecycle_macos_intel
+        continue-on-error: true
+        shell: python
+        env:
+          PUBLIC_CHUNK_0: ${{ needs.capture_macos_intel.outputs.lifecycle_0 }}
+          PUBLIC_CHUNK_1: ${{ needs.capture_macos_intel.outputs.lifecycle_1 }}
+          PUBLIC_CHUNK_2: ${{ needs.capture_macos_intel.outputs.lifecycle_2 }}
+          PUBLIC_CHUNK_3: ${{ needs.capture_macos_intel.outputs.lifecycle_3 }}
+          PUBLIC_CHUNK_4: ${{ needs.capture_macos_intel.outputs.lifecycle_4 }}
+          PUBLIC_CHUNK_5: ${{ needs.capture_macos_intel.outputs.lifecycle_5 }}
+        run: |
+          import subprocess
+          subprocess.run(["python", "stress_ci.py", "receive", "--case", "lifecycle", "--origin", "macos-clang-x64"],check=True)
+      - name: Replay exact lifecycle records from all five origins
+        id: case_lifecycle
+        continue-on-error: true
+        shell: python
+        run: |
+          import subprocess
+          subprocess.run(["python", "stress_ci.py", "consume", "--case", "lifecycle", "--compiler", "msvc", "--config", "RelWithDebInfo", "--simd", "4", "--workers", "4", "--cycles", "4", "--build", "stress-build"],check=True)
+      - name: Require all three actual case steps to pass
+        if: always()
+        shell: python
+        run: |
+          outcomes=['${{ steps.case_contacts.outcome }}','${{ steps.case_joints.outcome }}','${{ steps.case_lifecycle.outcome }}']
+          receives=['${{ steps.receive_contacts_windows.outcome }}', '${{ steps.receive_contacts_linux_x64.outcome }}', '${{ steps.receive_contacts_linux_arm64.outcome }}', '${{ steps.receive_contacts_macos_arm64.outcome }}', '${{ steps.receive_contacts_macos_intel.outcome }}', '${{ steps.receive_joints_windows.outcome }}', '${{ steps.receive_joints_linux_x64.outcome }}', '${{ steps.receive_joints_linux_arm64.outcome }}', '${{ steps.receive_joints_macos_arm64.outcome }}', '${{ steps.receive_joints_macos_intel.outcome }}', '${{ steps.receive_lifecycle_windows.outcome }}', '${{ steps.receive_lifecycle_linux_x64.outcome }}', '${{ steps.receive_lifecycle_linux_arm64.outcome }}', '${{ steps.receive_lifecycle_macos_arm64.outcome }}', '${{ steps.receive_lifecycle_macos_intel.outcome }}']
+          print({'case_step_outcomes':outcomes,'receive_step_outcomes':receives})
+          if outcomes!=['success','success','success'] or receives!=['success']*15:
               raise SystemExit(1)
