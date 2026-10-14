@@ -15,42 +15,353 @@ concurrency:
 jobs:
   test:
     if: github.event.repository.visibility == 'public'
-    name: ${{ matrix.target }} / ${{ matrix.config }}
+    name: ${{ matrix.target }} / ${{ matrix.config }} / SIMD${{ matrix.simd }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        include:
+          - target: windows-msvc-x64
+            runner: windows-2022
+            arch: x86_64
+            compiler: msvc
+            config: Debug
+            simd: 4
+          - target: windows-msvc-x64
+            runner: windows-2022
+            arch: x86_64
+            compiler: msvc
+            config: Debug
+            simd: 8
+          - target: windows-msvc-x64
+            runner: windows-2022
+            arch: x86_64
+            compiler: msvc
+            config: RelWithDebInfo
+            simd: 4
+          - target: windows-msvc-x64
+            runner: windows-2022
+            arch: x86_64
+            compiler: msvc
+            config: RelWithDebInfo
+            simd: 8
+          - target: windows-clang-cl-x64
+            runner: windows-2022
+            arch: x86_64
+            compiler: clang-cl
+            config: Debug
+            simd: 4
+          - target: windows-clang-cl-x64
+            runner: windows-2022
+            arch: x86_64
+            compiler: clang-cl
+            config: Debug
+            simd: 8
+          - target: windows-clang-cl-x64
+            runner: windows-2022
+            arch: x86_64
+            compiler: clang-cl
+            config: RelWithDebInfo
+            simd: 4
+          - target: windows-clang-cl-x64
+            runner: windows-2022
+            arch: x86_64
+            compiler: clang-cl
+            config: RelWithDebInfo
+            simd: 8
+          - target: linux-gcc-x64
+            runner: ubuntu-24.04
+            arch: x86_64
+            compiler: gcc
+            config: Debug
+            simd: 4
+          - target: linux-gcc-x64
+            runner: ubuntu-24.04
+            arch: x86_64
+            compiler: gcc
+            config: Debug
+            simd: 8
+          - target: linux-gcc-x64
+            runner: ubuntu-24.04
+            arch: x86_64
+            compiler: gcc
+            config: RelWithDebInfo
+            simd: 4
+          - target: linux-gcc-x64
+            runner: ubuntu-24.04
+            arch: x86_64
+            compiler: gcc
+            config: RelWithDebInfo
+            simd: 8
+          - target: linux-clang-x64
+            runner: ubuntu-24.04
+            arch: x86_64
+            compiler: clang
+            config: Debug
+            simd: 4
+          - target: linux-clang-x64
+            runner: ubuntu-24.04
+            arch: x86_64
+            compiler: clang
+            config: Debug
+            simd: 8
+          - target: linux-clang-x64
+            runner: ubuntu-24.04
+            arch: x86_64
+            compiler: clang
+            config: RelWithDebInfo
+            simd: 4
+          - target: linux-clang-x64
+            runner: ubuntu-24.04
+            arch: x86_64
+            compiler: clang
+            config: RelWithDebInfo
+            simd: 8
+          - target: linux-gcc-arm64
+            runner: ubuntu-24.04-arm
+            arch: arm64
+            compiler: gcc
+            config: Debug
+            simd: 4
+          - target: linux-gcc-arm64
+            runner: ubuntu-24.04-arm
+            arch: arm64
+            compiler: gcc
+            config: RelWithDebInfo
+            simd: 4
+          - target: linux-clang-arm64
+            runner: ubuntu-24.04-arm
+            arch: arm64
+            compiler: clang
+            config: Debug
+            simd: 4
+          - target: linux-clang-arm64
+            runner: ubuntu-24.04-arm
+            arch: arm64
+            compiler: clang
+            config: RelWithDebInfo
+            simd: 4
+          - target: macos-clang-arm64
+            runner: macos-15
+            arch: arm64
+            compiler: clang
+            config: Debug
+            simd: 4
+          - target: macos-clang-arm64
+            runner: macos-15
+            arch: arm64
+            compiler: clang
+            config: RelWithDebInfo
+            simd: 4
+          - target: macos-clang-x64
+            runner: macos-15-intel
+            arch: x86_64
+            compiler: clang
+            config: Debug
+            simd: 4
+          - target: macos-clang-x64
+            runner: macos-15-intel
+            arch: x86_64
+            compiler: clang
+            config: Debug
+            simd: 8
+          - target: macos-clang-x64
+            runner: macos-15-intel
+            arch: x86_64
+            compiler: clang
+            config: RelWithDebInfo
+            simd: 4
+          - target: macos-clang-x64
+            runner: macos-15-intel
+            arch: x86_64
+            compiler: clang
+            config: RelWithDebInfo
+            simd: 8
+    steps:
+      - name: Checkout generic CI sources
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Checkout unchanged upstream source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: erincatto/box3d
+          ref: 5d83df83ab47172c2c745b44315e7538ead02397
+          path: upstream
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Observe CPU and architecture
+        shell: python
+        run: |
+          import subprocess
+          subprocess.run(["python", "ci.py", "inventory", "--expected-arch", "${{ matrix.arch }}"], check=True)
+      - name: Run unchanged upstream test suites
+        shell: python
+        run: |
+          import subprocess
+          subprocess.run(["python", "ci.py", "test", "--compiler", "${{ matrix.compiler }}", "--config", "${{ matrix.config }}", "--simd", "${{ matrix.simd }}"], check=True)
+
+  capture_windows:
+    if: github.event.repository.visibility == 'public'
+    name: Public recording / windows-msvc-x64
+    runs-on: windows-2022
+    timeout-minutes: 15
+    outputs:
+      recording: ${{ steps.emit.outputs.recording }}
+    steps:
+      - name: Checkout generic CI sources
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Checkout unchanged upstream source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: erincatto/box3d
+          ref: 5d83df83ab47172c2c745b44315e7538ead02397
+          path: upstream
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Observe CPU and architecture
+        shell: python
+        run: |
+          import subprocess
+          subprocess.run(["python", "ci.py", "inventory", "--expected-arch", "x86_64"], check=True)
+      - name: Capture and locally verify public recording
+        id: emit
+        shell: python
+        env:
+          PUBLIC_ORIGIN: windows-msvc-x64
+        run: |
+          import subprocess
+          subprocess.run(["python", "ci.py", "capture", "--compiler", "msvc", "--config", "RelWithDebInfo", "--output-key", "recording"], check=True)
+
+  capture_linux_x64:
+    if: github.event.repository.visibility == 'public'
+    name: Public recording / linux-gcc-x64
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    outputs:
+      recording: ${{ steps.emit.outputs.recording }}
+    steps:
+      - name: Checkout generic CI sources
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Checkout unchanged upstream source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: erincatto/box3d
+          ref: 5d83df83ab47172c2c745b44315e7538ead02397
+          path: upstream
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Observe CPU and architecture
+        shell: python
+        run: |
+          import subprocess
+          subprocess.run(["python", "ci.py", "inventory", "--expected-arch", "x86_64"], check=True)
+      - name: Capture and locally verify public recording
+        id: emit
+        shell: python
+        env:
+          PUBLIC_ORIGIN: linux-gcc-x64
+        run: |
+          import subprocess
+          subprocess.run(["python", "ci.py", "capture", "--compiler", "gcc", "--config", "RelWithDebInfo", "--output-key", "recording"], check=True)
+
+  capture_linux_arm64:
+    if: github.event.repository.visibility == 'public'
+    name: Public recording / linux-clang-arm64
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 15
+    outputs:
+      recording: ${{ steps.emit.outputs.recording }}
+    steps:
+      - name: Checkout generic CI sources
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Checkout unchanged upstream source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: erincatto/box3d
+          ref: 5d83df83ab47172c2c745b44315e7538ead02397
+          path: upstream
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Observe CPU and architecture
+        shell: python
+        run: |
+          import subprocess
+          subprocess.run(["python", "ci.py", "inventory", "--expected-arch", "arm64"], check=True)
+      - name: Capture and locally verify public recording
+        id: emit
+        shell: python
+        env:
+          PUBLIC_ORIGIN: linux-clang-arm64
+        run: |
+          import subprocess
+          subprocess.run(["python", "ci.py", "capture", "--compiler", "clang", "--config", "RelWithDebInfo", "--output-key", "recording"], check=True)
+
+  capture_macos:
+    if: github.event.repository.visibility == 'public'
+    name: Public recording / macos-clang-arm64
+    runs-on: macos-15
+    timeout-minutes: 15
+    outputs:
+      recording: ${{ steps.emit.outputs.recording }}
+    steps:
+      - name: Checkout generic CI sources
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Checkout unchanged upstream source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: erincatto/box3d
+          ref: 5d83df83ab47172c2c745b44315e7538ead02397
+          path: upstream
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Observe CPU and architecture
+        shell: python
+        run: |
+          import subprocess
+          subprocess.run(["python", "ci.py", "inventory", "--expected-arch", "arm64"], check=True)
+      - name: Capture and locally verify public recording
+        id: emit
+        shell: python
+        env:
+          PUBLIC_ORIGIN: macos-clang-arm64
+        run: |
+          import subprocess
+          subprocess.run(["python", "ci.py", "capture", "--compiler", "clang", "--config", "RelWithDebInfo", "--output-key", "recording"], check=True)
+
+  consume:
+    if: github.event.repository.visibility == 'public'
+    needs: [capture_windows, capture_linux_x64, capture_linux_arm64, capture_macos]
+    name: Cross-host replay / ${{ matrix.target }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 15
     strategy:
       fail-fast: false
       max-parallel: 4
       matrix:
-        config: [Debug, RelWithDebInfo]
-        target:
-          - windows-msvc-x64
-          - windows-clang-cl-x64
-          - linux-gcc-x64
-          - linux-clang-x64
-          - linux-gcc-arm64
-          - linux-clang-arm64
-          - macos-clang-arm64
         include:
           - target: windows-msvc-x64
             runner: windows-2022
-            arch: x64
+            arch: x86_64
             compiler: msvc
-          - target: windows-clang-cl-x64
-            runner: windows-2022
-            arch: x64
-            compiler: clang-cl
           - target: linux-gcc-x64
             runner: ubuntu-24.04
-            arch: x64
-            compiler: gcc
-          - target: linux-clang-x64
-            runner: ubuntu-24.04
-            arch: x64
-            compiler: clang
-          - target: linux-gcc-arm64
-            runner: ubuntu-24.04-arm
-            arch: arm64
+            arch: x86_64
             compiler: gcc
           - target: linux-clang-arm64
             runner: ubuntu-24.04-arm
@@ -61,6 +372,11 @@ jobs:
             arch: arm64
             compiler: clang
     steps:
+      - name: Checkout generic CI sources
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 1
+          persist-credentials: false
       - name: Checkout unchanged upstream source
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
@@ -69,78 +385,15 @@ jobs:
           path: upstream
           fetch-depth: 1
           persist-credentials: false
-      - name: Build and run upstream tests
+      - name: Observe CPU and architecture
+        shell: python
+        run: |
+          import subprocess
+          subprocess.run(["python", "ci.py", "inventory", "--expected-arch", "${{ matrix.arch }}"], check=True)
+      - name: Replay exact public recordings from every producer
         shell: python
         env:
-          EXPECTED_ARCH: ${{ matrix.arch }}
-          COMPILER: ${{ matrix.compiler }}
-          CONFIG: ${{ matrix.config }}
+          PUBLIC_RECORDINGS_JSON: ${{ toJSON(needs) }}
         run: |
-          import os
-          import pathlib
-          import platform
           import subprocess
-          import sys
-
-          pin = '5d83df83ab47172c2c745b44315e7538ead02397'
-          source = pathlib.Path('upstream')
-          config = os.environ['CONFIG']
-          compiler = os.environ['COMPILER']
-          actual_arch = platform.machine().lower()
-          expected_arch = os.environ['EXPECTED_ARCH']
-          accepted = {'x64': {'amd64', 'x86_64'}, 'arm64': {'arm64', 'aarch64'}}
-          if actual_arch not in accepted[expected_arch]:
-              sys.exit('Unexpected runner architecture: ' + actual_arch)
-
-          def run(args, label, expected=()):
-              result = subprocess.run(args, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, errors='replace')
-              if result.returncode or any(marker not in result.stdout for marker in expected):
-                  print(result.stdout[-12000:])
-                  sys.exit(label + ' failed')
-              print(label + ': PASS')
-              for line in result.stdout.splitlines():
-                  if line.lstrip().startswith('subtest skipped:'):
-                      print(line.strip())
-              return result.stdout
-
-          revision = run(['git', '-C', str(source), 'rev-parse', 'HEAD'], 'Source revision').strip()
-          if revision != pin:
-              sys.exit('Unexpected source revision')
-          dirty = run(['git', '-C', str(source), 'status', '--porcelain'], 'Unchanged source').strip()
-          if dirty:
-              sys.exit('Upstream source is modified')
-          print('Runner: ' + platform.system() + '/' + actual_arch)
-          print('Configuration: ' + config + ', compiler: ' + compiler)
-          print(run(['cmake', '--version'], 'CMake available').splitlines()[0])
-          args = ['cmake', '-S', str(source), '-B', 'build',
-                  '-DCMAKE_BUILD_TYPE=' + config, '-DBUILD_SHARED_LIBS=OFF',
-                  '-DBOX3D_SAMPLES=OFF', '-DBOX3D_BENCHMARKS=OFF',
-                  '-DBOX3D_DOCS=OFF', '-DBOX3D_UNIT_TESTS=ON',
-                  '-DBOX3D_PROFILE=OFF', '-DBOX3D_SANITIZE=OFF',
-                  '-DBOX3D_VALIDATE=ON', '-DBOX3D_DOUBLE_PRECISION=OFF',
-                  '-DBOX3D_DISABLE_SIMD=OFF', '-DBOX3D_AVX2=OFF']
-          if platform.system() == 'Windows':
-              args += ['-G', 'Visual Studio 17 2022', '-A', 'x64']
-              if compiler == 'clang-cl':
-                  args += ['-T', 'ClangCL']
-          else:
-              cc, cxx = ('gcc', 'g++') if compiler == 'gcc' else ('clang', 'clang++')
-              args += ['-DCMAKE_C_COMPILER=' + cc, '-DCMAKE_CXX_COMPILER=' + cxx]
-              print(run([cc, '--version'], 'Compiler available').splitlines()[0])
-          configured = run(args, 'Configure')
-          for line in configured.splitlines():
-              if 'The C compiler identification is' in line:
-                  print(line.strip())
-          run(['cmake', '--build', 'build', '--config', config, '--target', 'test', '--parallel', '2'], 'Build')
-          exe = pathlib.Path('build/bin')
-          exe = exe / config / 'test.exe' if platform.system() == 'Windows' else exe / 'test'
-          for repeat in (1, 2):
-              run([str(exe.resolve()), 'DeterminismTest'], 'DeterminismTest process ' + str(repeat),
-                  ('test passed: DeterminismTest', 'subtest passed: CrossPlatformTest',
-                   'subtest passed: MultithreadingTest', 'subtest passed: WavePileTest',
-                   'subtest passed: QuerySpawnTest', 'subtest passed: MeshDropTest'))
-              run([str(exe.resolve()), 'RecordingTest'], 'RecordingTest process ' + str(repeat),
-                  ('test passed: RecordingTest',))
-          run([str(exe.resolve())], 'Complete upstream suite',
-              ('test passed: DeterminismTest', 'test passed: RecordingTest', 'All Box3D tests passed!'))
-          print('Unchanged upstream tests completed.')
+          subprocess.run(["python", "ci.py", "consume", "--compiler", "${{ matrix.compiler }}", "--config", "RelWithDebInfo"], check=True)
