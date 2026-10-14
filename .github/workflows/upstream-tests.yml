@@ -1,0 +1,146 @@
+name: Upstream Box3D tests
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: upstream-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    if: github.event.repository.visibility == 'public'
+    name: ${{ matrix.target }} / ${{ matrix.config }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        config: [Debug, RelWithDebInfo]
+        target:
+          - windows-msvc-x64
+          - windows-clang-cl-x64
+          - linux-gcc-x64
+          - linux-clang-x64
+          - linux-gcc-arm64
+          - linux-clang-arm64
+          - macos-clang-arm64
+        include:
+          - target: windows-msvc-x64
+            runner: windows-2022
+            arch: x64
+            compiler: msvc
+          - target: windows-clang-cl-x64
+            runner: windows-2022
+            arch: x64
+            compiler: clang-cl
+          - target: linux-gcc-x64
+            runner: ubuntu-24.04
+            arch: x64
+            compiler: gcc
+          - target: linux-clang-x64
+            runner: ubuntu-24.04
+            arch: x64
+            compiler: clang
+          - target: linux-gcc-arm64
+            runner: ubuntu-24.04-arm
+            arch: arm64
+            compiler: gcc
+          - target: linux-clang-arm64
+            runner: ubuntu-24.04-arm
+            arch: arm64
+            compiler: clang
+          - target: macos-clang-arm64
+            runner: macos-15
+            arch: arm64
+            compiler: clang
+    steps:
+      - name: Checkout unchanged upstream source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: erincatto/box3d
+          ref: 5d83df83ab47172c2c745b44315e7538ead02397
+          path: upstream
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Build and run upstream tests
+        shell: python
+        env:
+          EXPECTED_ARCH: ${{ matrix.arch }}
+          COMPILER: ${{ matrix.compiler }}
+          CONFIG: ${{ matrix.config }}
+        run: |
+          import os
+          import pathlib
+          import platform
+          import subprocess
+          import sys
+
+          pin = '5d83df83ab47172c2c745b44315e7538ead02397'
+          source = pathlib.Path('upstream')
+          config = os.environ['CONFIG']
+          compiler = os.environ['COMPILER']
+          actual_arch = platform.machine().lower()
+          expected_arch = os.environ['EXPECTED_ARCH']
+          accepted = {'x64': {'amd64', 'x86_64'}, 'arm64': {'arm64', 'aarch64'}}
+          if actual_arch not in accepted[expected_arch]:
+              sys.exit('Unexpected runner architecture: ' + actual_arch)
+
+          def run(args, label, expected=()):
+              result = subprocess.run(args, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, errors='replace')
+              if result.returncode or any(marker not in result.stdout for marker in expected):
+                  print(result.stdout[-12000:])
+                  sys.exit(label + ' failed')
+              print(label + ': PASS')
+              for line in result.stdout.splitlines():
+                  if line.lstrip().startswith('subtest skipped:'):
+                      print(line.strip())
+              return result.stdout
+
+          revision = run(['git', '-C', str(source), 'rev-parse', 'HEAD'], 'Source revision').strip()
+          if revision != pin:
+              sys.exit('Unexpected source revision')
+          dirty = run(['git', '-C', str(source), 'status', '--porcelain'], 'Unchanged source').strip()
+          if dirty:
+              sys.exit('Upstream source is modified')
+          print('Runner: ' + platform.system() + '/' + actual_arch)
+          print('Configuration: ' + config + ', compiler: ' + compiler)
+          print(run(['cmake', '--version'], 'CMake available').splitlines()[0])
+          args = ['cmake', '-S', str(source), '-B', 'build',
+                  '-DCMAKE_BUILD_TYPE=' + config, '-DBUILD_SHARED_LIBS=OFF',
+                  '-DBOX3D_SAMPLES=OFF', '-DBOX3D_BENCHMARKS=OFF',
+                  '-DBOX3D_DOCS=OFF', '-DBOX3D_UNIT_TESTS=ON',
+                  '-DBOX3D_PROFILE=OFF', '-DBOX3D_SANITIZE=OFF',
+                  '-DBOX3D_VALIDATE=ON', '-DBOX3D_DOUBLE_PRECISION=OFF',
+                  '-DBOX3D_DISABLE_SIMD=OFF', '-DBOX3D_AVX2=OFF']
+          if platform.system() == 'Windows':
+              args += ['-G', 'Visual Studio 17 2022', '-A', 'x64']
+              if compiler == 'clang-cl':
+                  args += ['-T', 'ClangCL']
+          else:
+              cc, cxx = ('gcc', 'g++') if compiler == 'gcc' else ('clang', 'clang++')
+              args += ['-DCMAKE_C_COMPILER=' + cc, '-DCMAKE_CXX_COMPILER=' + cxx]
+              print(run([cc, '--version'], 'Compiler available').splitlines()[0])
+          configured = run(args, 'Configure')
+          for line in configured.splitlines():
+              if 'The C compiler identification is' in line:
+                  print(line.strip())
+          run(['cmake', '--build', 'build', '--config', config, '--target', 'test', '--parallel', '2'], 'Build')
+          exe = pathlib.Path('build/bin')
+          exe = exe / config / 'test.exe' if platform.system() == 'Windows' else exe / 'test'
+          for repeat in (1, 2):
+              run([str(exe.resolve()), 'DeterminismTest'], 'DeterminismTest process ' + str(repeat),
+                  ('test passed: DeterminismTest', 'subtest passed: CrossPlatformTest',
+                   'subtest passed: MultithreadingTest', 'subtest passed: WavePileTest',
+                   'subtest passed: QuerySpawnTest', 'subtest passed: MeshDropTest'))
+              run([str(exe.resolve()), 'RecordingTest'], 'RecordingTest process ' + str(repeat),
+                  ('test passed: RecordingTest',))
+          run([str(exe.resolve())], 'Complete upstream suite',
+              ('test passed: DeterminismTest', 'test passed: RecordingTest', 'All Box3D tests passed!'))
+          print('Unchanged upstream tests completed.')
