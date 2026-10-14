@@ -32,6 +32,10 @@ CHUNK_SIZE = 20000
 CHUNK_COUNT = 6
 RECORD_LIMIT = CHUNK_SIZE * CHUNK_COUNT
 EMPTY_CHUNK_SENTINEL = "."
+FIRST_BLOCK_STATES = 512
+FIRST_BLOCK_FRAME_COUNT = FIRST_BLOCK_STATES - 1
+FIRST_BLOCK_MAX_BYTES = 2 * 1024 * 1024
+FIRST_BLOCK_LOG_CHUNK_CHARS = 20_000
 HEADER = struct.Struct("<IIII")
 STATE_COUNT = struct.Struct("<I")
 CELL = struct.Struct("<II")
@@ -315,6 +319,70 @@ def make_record(origin: str, case: str, checkpoint: int, capture: dict[str, Any]
             "full_trace": {"bytes": full["bytes"], "sha256": full["sha256"], "states": full["frames"] + 1, "block_states": 512, "block_sha256": [block["sha256"] for block in full["blockHashes"]]}}
 
 
+def first_block_bytes(case: str, full: dict[str, Any]) -> tuple[bytes, str]:
+    case_ids = {"contacts": 1, "joints": 2, "lifecycle": 3}
+    if case not in case_ids:
+        raise RuntimeError("first-block diagnostic has an unsupported case")
+    if (full.get("case") != case or full.get("checkpoint") != 0 or full.get("frames") != 4096):
+        raise RuntimeError("first-block diagnostic requires a complete checkpoint-zero trace")
+    encoded_states = full.get("encodedStates")
+    if not isinstance(encoded_states, list) or len(encoded_states) != 4097:
+        raise RuntimeError("first-block diagnostic requires all 4097 parsed states")
+    selected = encoded_states[:FIRST_BLOCK_STATES]
+    if any(not isinstance(state, bytes) for state in selected):
+        raise RuntimeError("first-block diagnostic contains a non-byte state")
+    selected_bytes = b"".join(selected)
+    block_hashes = full.get("blockHashes")
+    if not isinstance(block_hashes, list) or not block_hashes or not isinstance(block_hashes[0], dict):
+        raise RuntimeError("first-block diagnostic is missing its first block hash")
+    block = block_hashes[0]
+    actual_block_hash = sha256(selected_bytes)
+    if (block.get("firstState") != 0 or block.get("stateCount") != FIRST_BLOCK_STATES or
+            block.get("sha256") != actual_block_hash):
+        raise RuntimeError("first-block diagnostic does not match the parsed trace block")
+    raw = HEADER.pack(TRACE_MAGIC, case_ids[case], 0, FIRST_BLOCK_FRAME_COUNT) + selected_bytes
+    if len(raw) > FIRST_BLOCK_MAX_BYTES:
+        raise RuntimeError("first-block raw diagnostic exceeds the 2 MiB limit")
+    return raw, actual_block_hash
+
+
+def first_block_diagnostic(origin: str, case: str, full: dict[str, Any]) -> tuple[dict[str, Any], list[str]]:
+    raw, block_hash = first_block_bytes(case, full)
+    payload = encode_bytes(raw)
+    if len(payload.encode("ascii")) > FIRST_BLOCK_MAX_BYTES:
+        raise RuntimeError("first-block encoded diagnostic exceeds the 2 MiB limit")
+    chunks = [payload[start:start + FIRST_BLOCK_LOG_CHUNK_CHARS]
+              for start in range(0, len(payload), FIRST_BLOCK_LOG_CHUNK_CHARS)]
+    if not chunks or any(not chunk or len(chunk) > FIRST_BLOCK_LOG_CHUNK_CHARS for chunk in chunks):
+        raise RuntimeError("first-block diagnostic could not be split into bounded log chunks")
+    summary = {
+        "schema": "box3d-ci-stress-first-block-v1",
+        "origin": origin,
+        "case": case,
+        "states": FIRST_BLOCK_STATES,
+        "bytes": len(raw),
+        "sha256": sha256(raw),
+        "block_sha256": block_hash,
+        "encoding": "zlib+base64",
+        "chunk_chars": FIRST_BLOCK_LOG_CHUNK_CHARS,
+        "chunk_count": len(chunks),
+    }
+    return summary, chunks
+
+
+def emit_first_block_log(origin: str, case: str, full: dict[str, Any]) -> None:
+    summary, chunks = first_block_diagnostic(origin, case, full)
+    print(json.dumps(summary, sort_keys=True, separators=(",", ":")))
+    for index, payload in enumerate(chunks):
+        print(json.dumps({
+            "schema": "box3d-ci-stress-first-block-chunk-v1",
+            "origin": origin,
+            "case": case,
+            "index": index,
+            "payload": payload,
+        }, sort_keys=True, separators=(",", ":")))
+
+
 def append_output(path: pathlib.Path, key: str, value: str) -> None:
     with path.open("a", encoding="utf-8", newline="\n") as stream:
         stream.write(f"{key}={value}\n")
@@ -391,6 +459,8 @@ def produce(args: argparse.Namespace) -> int:
                               "empty_chunk_sentinel": EMPTY_CHUNK_SENTINEL,
                               "local_verify": local_verify, "payload_stdout": False},
                              sort_keys=True, separators=(",", ":")))
+            if args.log_first_block:
+                emit_first_block_log(origin, case, full)
     output_keys = [f"{case}_{index}" for case in CASES for index in range(CHUNK_COUNT)]
     print(json.dumps({"schema": "box3d-ci-stress-produce-v1", "revision": PIN,
                       "origin": origin, "cases": list(CASES), "output_keys": output_keys,
@@ -717,6 +787,8 @@ def main() -> int:
     sub = parser.add_subparsers(dest="command", required=True)
     producer = sub.add_parser("produce", help="capture and export contacts, joints, and lifecycle records")
     common_build_args(producer, simd=False)
+    producer.add_argument("--log-first-block", action="store_true",
+                          help="emit the first 512 selected states as bounded lossless log chunks")
     producer.set_defaults(func=produce)
     receiver = sub.add_parser("receive", help="validate one bounded public producer record into job-local storage")
     receiver.add_argument("--case", choices=CASES, required=True)

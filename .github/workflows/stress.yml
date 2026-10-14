@@ -62,7 +62,7 @@ jobs:
           PUBLIC_ORIGIN: windows-msvc-x64
         run: |
           import subprocess
-          subprocess.run(["python", "stress_ci.py", "produce", "--compiler", "msvc", "--config", "RelWithDebInfo", "--build", "stress-build"],check=True)
+          subprocess.run(["python", "stress_ci.py", "produce", "--compiler", "msvc", "--config", "RelWithDebInfo", "--build", "stress-build", "--log-first-block"],check=True)
 
   capture_linux_x64:
     if: github.event.repository.visibility == 'public'
@@ -112,7 +112,7 @@ jobs:
           PUBLIC_ORIGIN: linux-gcc-x64
         run: |
           import subprocess
-          subprocess.run(["python", "stress_ci.py", "produce", "--compiler", "gcc", "--config", "RelWithDebInfo", "--build", "stress-build"],check=True)
+          subprocess.run(["python", "stress_ci.py", "produce", "--compiler", "gcc", "--config", "RelWithDebInfo", "--build", "stress-build", "--log-first-block"],check=True)
 
   capture_linux_arm64:
     if: github.event.repository.visibility == 'public'
@@ -162,7 +162,7 @@ jobs:
           PUBLIC_ORIGIN: linux-clang-arm64
         run: |
           import subprocess
-          subprocess.run(["python", "stress_ci.py", "produce", "--compiler", "clang", "--config", "RelWithDebInfo", "--build", "stress-build"],check=True)
+          subprocess.run(["python", "stress_ci.py", "produce", "--compiler", "clang", "--config", "RelWithDebInfo", "--build", "stress-build", "--log-first-block"],check=True)
 
   capture_macos_arm64:
     if: github.event.repository.visibility == 'public'
@@ -212,7 +212,7 @@ jobs:
           PUBLIC_ORIGIN: macos-clang-arm64
         run: |
           import subprocess
-          subprocess.run(["python", "stress_ci.py", "produce", "--compiler", "clang", "--config", "RelWithDebInfo", "--build", "stress-build"],check=True)
+          subprocess.run(["python", "stress_ci.py", "produce", "--compiler", "clang", "--config", "RelWithDebInfo", "--build", "stress-build", "--log-first-block"],check=True)
 
   capture_macos_intel:
     if: github.event.repository.visibility == 'public'
@@ -262,7 +262,7 @@ jobs:
           PUBLIC_ORIGIN: macos-clang-x64
         run: |
           import subprocess
-          subprocess.run(["python", "stress_ci.py", "produce", "--compiler", "clang", "--config", "RelWithDebInfo", "--build", "stress-build"],check=True)
+          subprocess.run(["python", "stress_ci.py", "produce", "--compiler", "clang", "--config", "RelWithDebInfo", "--build", "stress-build", "--log-first-block"],check=True)
 
   restore_relwithdebinfo:
     if: github.event.repository.visibility == 'public'
