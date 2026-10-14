@@ -7,6 +7,7 @@ import argparse
 import base64
 import hashlib
 import importlib.util
+import lzma
 import json
 import os
 import pathlib
@@ -370,7 +371,12 @@ def trace_to_logs(path: pathlib.Path, *, temp: pathlib.Path, profile: str,
     if not 1 <= size <= MAX_TRACE_RAW:
         return used, size, 0, "trace raw size outside 1..64 MiB"
     raw = resolved.read_bytes()
-    compressed = zlib.compress(raw, level=9)
+    zlib_bytes = zlib.compress(raw, level=9)
+    xz_bytes = lzma.compress(raw, format=lzma.FORMAT_XZ, preset=6)
+    if len(xz_bytes) < len(zlib_bytes):
+        compressed, encoding = xz_bytes, "xz+base64"
+    else:
+        compressed, encoding = zlib_bytes, "zlib+base64"
     if used + len(compressed) > MAX_PROFILE_COMPRESSED:
         return used, size, len(compressed), "profile compressed traces exceed 8 MiB"
     used += len(compressed)
@@ -378,7 +384,7 @@ def trace_to_logs(path: pathlib.Path, *, temp: pathlib.Path, profile: str,
     chunks = [encoded[i:i + CHUNK_CHARS] for i in range(0, len(encoded), CHUNK_CHARS)]
     emit({"schema": TRACE_SCHEMA, "profile": profile, "origin": origin, "driver": driver,
           "bytes": len(raw), "sha256": digest(raw), "compressed_bytes": len(compressed),
-          "compressed_sha256": digest(compressed), "encoding": "zlib+base64",
+          "compressed_sha256": digest(compressed), "encoding": encoding,
           "chunk_chars": CHUNK_CHARS, "chunk_count": len(chunks)})
     for index, chunk in enumerate(chunks):
         emit({"schema": CHUNK_SCHEMA, "profile": profile, "origin": origin,

@@ -211,8 +211,14 @@ static int rb_trial(int checkpoint,int workers,const Trace* reference,RBCheckpoi
     if (recording) b3DestroyRecording(recording);
     return ok;
 }
+static void rb_log_stderr(const char* message)
+{
+    // Preserve the upstream default prefix/message/newline; only change stream.
+    fprintf(stderr,"Box3D: %s\n",message);
+}
 int main(int argc,char** argv)
 {
+    b3SetLogFcn(rb_log_stderr);
     const char* profile="unspecified"; const char* path=NULL; int workers=1;
     for (int i=1;i<argc;i+=2) {
         if (i+1>=argc) goto usage;
