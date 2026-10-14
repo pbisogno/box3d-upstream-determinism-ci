@@ -45,7 +45,9 @@ jobs:
       - name: Inspect published struct definitions
         shell: python
         run: |
-          import ci, json, pathlib, subprocess
+          import json, pathlib, subprocess, sys
+          sys.path.insert(0, str(pathlib.Path.cwd()))
+          import ci
           ci.verified_source(pathlib.Path('upstream'))
           args=['cmake','-S','layout','-B','build-layout','-DCMAKE_BUILD_TYPE=RelWithDebInfo']+ci.cmake_compiler_args('${{ matrix.compiler }}',None)
           configured=ci.run(args,timeout=120)
