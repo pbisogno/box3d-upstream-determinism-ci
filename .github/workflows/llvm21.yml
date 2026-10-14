@@ -38,6 +38,15 @@ jobs:
         run: |
           import subprocess
           subprocess.run(['python','ci.py','inventory','--expected-arch','x86_64'],check=True)
+      - name: Require exact frozen helper bytes
+        shell: python
+        run: |
+          import hashlib, json, pathlib
+          raw=pathlib.Path('ci.py').read_bytes()
+          sha=hashlib.sha256(raw).hexdigest()
+          print(json.dumps({'schema':'box3d-ci-helper-bytes-v1','sha256':sha,'bytes':len(raw),'crlf':raw.count(b'\r\n'),'lf':raw.count(b'\n')}))
+          if sha!='a3ade53fc8bcb6a98d0b1816c2dfcb2c999155c8b54606a68446dd4270f9aa3f':
+              raise SystemExit('Frozen helper bytes differ from the approved Git blob')
       - name: Verify and extract fixed LLVM package
         id: llvm
         shell: python
