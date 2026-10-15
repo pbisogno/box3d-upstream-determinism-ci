@@ -259,17 +259,24 @@ static int z_replay(b3Recording* rec,const Trace* states,int checkpoint,int widt
     if (z_close(saved)) ok=0;
     return ok;
 }
-static void z_print_hooks(void)
+static void z_print_hooks(int trial,const char* profile)
 {
-    putchar('[');
-    for (int i=0;i<z_log_count;++i) {
-        ZHook* h=z_log+i;
-        printf("%s{\"tick\":%d,\"arm\":%d,\"stage\":%d,\"contact_index\":%d,\"generation\":%u,\"manifold\":%d,\"width\":%d,\"lane\":%d,\"bits\":[",
-            i?",":"",h->tick,h->arm,h->stage,h->index,h->generation,h->manifold,h->width,h->lane);
-        for (int j=0;j<h->count;++j) printf("%s\"%08x\"",j?",":"",h->bits[j]);
-        fputs("]}",stdout);
+    // A runner log line is bounded. Preserve event order and every raw bit in
+    // independent chunks; the result row carries the expected totals.
+    int parts=(z_log_count+31)/32;
+    for (int part=0;part<parts;++part) {
+        int offset=part*32,count=z_log_count-offset; if (count>32) count=32;
+        printf("{\"schema\":\"box3d-contactlab-v1\",\"type\":\"hooks\",\"driver\":\"zero\",\"profile\":\"%s\",\"instrumented\":%s,\"trial\":%d,\"part\":%d,\"parts\":%d,\"offset\":%d,\"count\":%d,\"total_count\":%d,\"hooks\":[",
+            profile,CONTACTLAB_INSTRUMENTED?"true":"false",trial,part,parts,offset,count,z_log_count);
+        for (int i=offset;i<offset+count;++i) {
+            ZHook* h=z_log+i;
+            printf("%s{\"tick\":%d,\"arm\":%d,\"stage\":%d,\"contact_index\":%d,\"generation\":%u,\"manifold\":%d,\"width\":%d,\"lane\":%d,\"bits\":[",
+                i>offset?",":"",h->tick,h->arm,h->stage,h->index,h->generation,h->manifold,h->width,h->lane);
+            for (int j=0;j<h->count;++j) printf("%s\"%08x\"",j?",":"",h->bits[j]);
+            fputs("]}",stdout);
+        }
+        puts("]}");
     }
-    putchar(']');
 }
 typedef struct { int firstBody,firstId,firstEvent,firstCache,bodyCells,idCells,eventCells,zeroCells,otherCells,bodyFloatCells; } ZDiff;
 static int z_category(uint32_t id)
@@ -457,10 +464,10 @@ static int z_trial(int trial,int kind,int sleepSnapshot,const char* profile,int 
         printf("%s{\"arm\":%d,\"first_body_tick\":%d,\"body_cells\":%d,\"body_nonzero_float_cells\":%d,\"first_id_tick\":%d,\"id_cells\":%d,\"first_event_tick\":%d,\"event_cells\":%d,\"first_cache_tick\":%d,\"cache_signed_zero_cells\":%d,\"cache_other_cells\":%d}",
             b==2?"":",",b,d->firstBody,d->bodyCells,d->bodyFloatCells,d->firstId,d->idCells,d->firstEvent,d->eventCells,d->firstCache,d->zeroCells,d->otherCells);
     }
-    printf("],\"target_contact_destroyed_arms\":%d,\"target_contact_slot_reused_arms\":%d,\"restore_first_difference\":{\"arm\":%d,\"tick\":%d,\"tag\":%u,\"expected\":\"%08x\",\"actual\":\"%08x\"},\"seed_event_buffers_compared\":false,\"future_event_order_compared\":true,\"cross_host_recording_transport_tested\":false,\"hooks\":",
+    printf("],\"target_contact_destroyed_arms\":%d,\"target_contact_slot_reused_arms\":%d,\"restore_first_difference\":{\"arm\":%d,\"tick\":%d,\"tag\":%u,\"expected\":\"%08x\",\"actual\":\"%08x\"},\"seed_event_buffers_compared\":false,\"future_event_order_compared\":true,\"cross_host_recording_transport_tested\":false,\"hooks_count\":%d,\"hook_parts\":%d}\n",
         targetGone[0]+targetGone[1]+targetGone[2]+targetGone[3],contactReused[0]+contactReused[1]+contactReused[2]+contactReused[3],
-        z_restore_arm,z_restore_tick,z_restore_tag,z_restore_expected,z_restore_actual);
-    z_print_hooks(); puts("}");
+        z_restore_arm,z_restore_tick,z_restore_tag,z_restore_expected,z_restore_actual,z_log_count,(z_log_count+31)/32);
+    z_print_hooks(trial,profile);
     for (int b=0;b<Z_ARMS;++b) { if (records[b]) b3DestroyRecording(records[b]); free(states[b]); }
     return ok;
 }

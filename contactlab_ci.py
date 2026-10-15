@@ -51,6 +51,10 @@ MAX_PROFILE_COMPRESSED = 8 * 1024 * 1024
 MAX_PROCESS_OUTPUT = 32 * 1024 * 1024
 MAX_BUILD_OUTPUT = 16 * 1024 * 1024
 QUALITY_STATUS = {"PASS", "FAIL"}
+ZERO_HOOK_FIELD_COUNTS = {1: 2, 2: 4, 3: 6, 4: 1, 5: 12, 6: 5, 7: 3}
+ZERO_HOOK_CHUNK_EVENTS = 32
+ZERO_HOOK_MAX_EVENTS = 8_192
+ZERO_HOOK_MAX_PARTS = 256
 
 
 class ContactLabError(RuntimeError):
@@ -235,11 +239,21 @@ def parse_records(raw: bytes, profile: str, driver: str, instrumented: bool,
     results = [row for row in records if row.get("type") == "result"]
     criteria = [row for row in records if row.get("type") == "criteria"]
     summaries = [row for row in records if row.get("type") == "summary"]
-    if len(results) != expected_results or len(criteria) != expected_criteria or len(summaries) != 1 or \
-            len(records) != expected_results + expected_criteria + 1:
+    hook_rows = [row for row in records if row.get("type") == "hooks"]
+    if len(results) != expected_results or len(criteria) != expected_criteria or len(summaries) != 1:
         errors.append("native record roster/count mismatch")
-    if any(kind not in {"criteria", "result", "summary"} for kind in types):
+    if len(summaries) == 1 and (not records or records[-1].get("type") != "summary"):
+        errors.append("native summary must be the final JSONL record")
+    if any(kind not in {"criteria", "result", "summary", "hooks"} for kind in types):
         errors.append("native JSONL contains an unknown record type")
+    if driver == "physics" and hook_rows:
+        errors.append("physics driver unexpectedly emitted zero-hook rows")
+    if driver == "zero":
+        errors.extend(validate_zero_hook_rows(records, profile, instrumented))
+    elif any(row.get("type") == "hooks" for row in records):
+        errors.append("non-zero driver emitted hook chunks")
+    if len(records) != expected_results + expected_criteria + 1 + len(hook_rows):
+        errors.append("native record count does not match result/criteria/summary plus hook chunks")
     for row in results:
         status = str(row.get("status", "")).upper()
         if driver == "physics" and status not in QUALITY_STATUS:
@@ -267,6 +281,105 @@ def parse_records(raw: bytes, profile: str, driver: str, instrumented: bool,
     if summary and driver == "physics" and instrumented and summary.get("activation_controls_pass") is not True:
         errors.append("summary did not confirm required hook activation controls")
     return records, errors
+
+
+def validate_zero_hook_rows(records: list[dict[str, Any]], profile: str,
+                            instrumented: bool) -> list[str]:
+    """Check complete, ordered hook chunks without collapsing their source order."""
+    errors: list[str] = []
+    results = [row for row in records if row.get("type") == "result"]
+    chunks = [row for row in records if row.get("type") == "hooks"]
+    chunk_positions = [i for i, row in enumerate(records) if row.get("type") == "hooks"]
+    result_positions = {row.get("trial"): i for i, row in enumerate(records)
+                        if row.get("type") == "result"}
+    result_trial_order = [row.get("trial") for row in records if row.get("type") == "result"]
+    by_trial: dict[int, list[tuple[int, dict[str, Any]]]] = {}
+    for position, row in zip(chunk_positions, chunks):
+        trial = row.get("trial")
+        if type(trial) is not int or not 1 <= trial <= 4:
+            errors.append("zero hook chunk has an invalid trial number")
+            continue
+        by_trial.setdefault(trial, []).append((position, row))
+    if (len(result_positions) != 4 or set(result_positions) != {1, 2, 3, 4} or
+            result_trial_order != [1, 2, 3, 4]):
+        errors.append("zero result trial roster is incomplete or duplicated")
+    for result in results:
+        trial = result.get("trial")
+        if type(trial) is not int or not 1 <= trial <= 4:
+            errors.append("zero result has an invalid trial number")
+            continue
+        total = result.get("hooks_count")
+        parts = result.get("hook_parts")
+        if type(total) is not int or total < 0 or type(parts) is not int or parts < 0:
+            errors.append(f"zero result {trial} has invalid hook count metadata")
+            continue
+        if total > ZERO_HOOK_MAX_EVENTS or parts > ZERO_HOOK_MAX_PARTS:
+            errors.append(f"zero result {trial} exceeds the bounded hook event/part limit")
+            continue
+        expected_parts = (total + ZERO_HOOK_CHUNK_EVENTS - 1) // ZERO_HOOK_CHUNK_EVENTS
+        if parts != expected_parts:
+            errors.append(f"zero result {trial} hook part count is inconsistent")
+        trial_chunks = by_trial.get(trial, [])
+        if len(trial_chunks) != parts:
+            errors.append(f"zero result {trial} hook chunks are missing or duplicated")
+        expected_part_indices = list(range(parts))
+        got_part_indices = [row.get("part") for _, row in trial_chunks]
+        if got_part_indices != expected_part_indices:
+            errors.append(f"zero result {trial} hook chunk order/index is invalid")
+        if parts == 0 and total != 0:
+            errors.append(f"zero result {trial} declares hooks without chunks")
+        event_offset = 0
+        next_result_position = min((position for result_trial, position in result_positions.items()
+                                    if result_trial > trial), default=len(records))
+        for part_index, (position, chunk) in enumerate(trial_chunks):
+            event_count = min(ZERO_HOOK_CHUNK_EVENTS, max(0, total - event_offset))
+            events = chunk.get("hooks")
+            if (type(chunk.get("part")) is not int or chunk.get("part") != part_index or
+                    type(chunk.get("parts")) is not int or type(chunk.get("offset")) is not int or
+                    type(chunk.get("count")) is not int or type(chunk.get("total_count")) is not int or
+                    chunk.get("profile") != profile or chunk.get("driver") != "zero" or
+                    chunk.get("instrumented") is not instrumented or
+                    chunk.get("parts") != parts or chunk.get("offset") != event_offset or
+                    chunk.get("count") != event_count or chunk.get("total_count") != total or
+                    not isinstance(events, list) or len(events) != event_count):
+                errors.append(f"zero result {trial} hook chunk metadata/count is invalid")
+            if position <= result_positions.get(trial, -1):
+                errors.append(f"zero result {trial} hook chunk precedes its result row")
+            if position >= next_result_position:
+                errors.append(f"zero result {trial} hook chunks occur after the next result row")
+            if part_index and position <= trial_chunks[part_index - 1][0]:
+                errors.append(f"zero result {trial} hook chunks are reordered")
+            if isinstance(events, list):
+                for event in events:
+                    if not isinstance(event, dict):
+                        errors.append(f"zero result {trial} contains a malformed hook event")
+                        continue
+                    stage = event.get("stage")
+                    width, lane = event.get("width"), event.get("lane")
+                    bits = event.get("bits")
+                    integer_fields = ("tick", "arm", "stage", "contact_index", "generation",
+                                      "manifold", "width", "lane")
+                    if any(type(event.get(key)) is not int for key in integer_fields):
+                        errors.append(f"zero result {trial} hook event has non-integer metadata")
+                        continue
+                    if (event["tick"] < 0 or event["tick"] > 1536 or event["arm"] not in range(4) or
+                            stage not in ZERO_HOOK_FIELD_COUNTS or event["contact_index"] not in range(256) or
+                            not 0 <= event["generation"] <= 0xffffffff or event["manifold"] not in range(4) or
+                            width not in {1, 4, 8} or not 0 <= lane < width or
+                            not isinstance(bits, list) or len(bits) != ZERO_HOOK_FIELD_COUNTS.get(stage) or
+                            any(not isinstance(value, str) or len(value) != 8 or
+                                any(ch not in "0123456789abcdefABCDEF" for ch in value) for value in bits)):
+                        errors.append(f"zero result {trial} hook event violates the stage field contract")
+            event_offset += event_count
+        if event_offset != total:
+            errors.append(f"zero result {trial} hook event total does not reconcile")
+        if not instrumented and (total != 0 or parts != 0 or trial_chunks):
+            errors.append(f"pristine zero result {trial} unexpectedly has hook observations")
+    if set(by_trial) - set(result_positions):
+        errors.append("zero hook chunk has no matching result trial")
+    if not instrumented and chunks:
+        errors.append("pristine zero driver emitted hook chunks")
+    return errors
 
 
 def trace_to_logs(path: pathlib.Path, *, temp: pathlib.Path, profile: str,
