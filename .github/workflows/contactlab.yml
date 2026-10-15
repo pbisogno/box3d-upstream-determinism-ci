@@ -1,0 +1,238 @@
+name: Public Box3D contact cache laboratory
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Five canonical profiles or the expanded scalar and AVX2 profiles
+        required: true
+        default: smoke
+        type: choice
+        options: [smoke, full]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: public-contactlab-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  canonical:
+    if: github.event.repository.visibility == 'public'
+    name: Canonical / ${{ matrix.origin }} / SIMD4 / W1
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      max-parallel: 5
+      matrix:
+        include:
+          - origin: windows-msvc-x64
+            runner: windows-2022
+            arch: x86_64
+            compiler: msvc
+          - origin: linux-gcc-x64
+            runner: ubuntu-24.04
+            arch: x86_64
+            compiler: gcc
+          - origin: linux-clang-arm64
+            runner: ubuntu-24.04-arm
+            arch: arm64
+            compiler: clang
+          - origin: macos-clang-arm64
+            runner: macos-15
+            arch: arm64
+            compiler: clang
+          - origin: macos-clang-x64
+            runner: macos-15-intel
+            arch: x86_64
+            compiler: clang
+    steps:
+      - name: Checkout generic sources
+        id: sources
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Checkout unchanged upstream
+        id: upstream
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: erincatto/box3d
+          ref: 5d83df83ab47172c2c745b44315e7538ead02397
+          path: upstream
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Observe runner architecture and CPU
+        id: inventory
+        shell: python
+        run: |
+          import subprocess
+          subprocess.run(['python', '-B', 'ci.py', 'inventory', '--expected-arch', '${{ matrix.arch }}'], check=True)
+      - name: Build and run contact cache diagnostics
+        id: contactlab
+        if: ${{ !cancelled() && steps.sources.outcome == 'success' && steps.upstream.outcome == 'success' && steps.inventory.outcome == 'success' }}
+        continue-on-error: true
+        shell: python
+        run: |
+          import subprocess
+          subprocess.run(['python', '-B', 'contactlab_ci.py', 'run',
+                          '--origin', '${{ matrix.origin }}', '--compiler', '${{ matrix.compiler }}',
+                          '--config', 'RelWithDebInfo', '--simd', '4', '--workers', '1',
+                          '--parallel', '2', '--timeout', '900'], check=True)
+      - name: Require completed execution and quality gates
+        if: always()
+        shell: python
+        run: |
+          outcomes = {'sources': '${{ steps.sources.outcome }}',
+                      'upstream': '${{ steps.upstream.outcome }}',
+                      'inventory': '${{ steps.inventory.outcome }}',
+                      'contactlab': '${{ steps.contactlab.outcome }}'}
+          print({'step_outcomes': outcomes})
+          if any(value != 'success' for value in outcomes.values()):
+              raise SystemExit(1)
+
+  scalar:
+    needs: canonical
+    if: ${{ always() && !cancelled() && github.event.repository.visibility == 'public' && inputs.mode == 'full' }}
+    name: Scalar / ${{ matrix.origin }} / SIMD0 / W1
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      max-parallel: 5
+      matrix:
+        include:
+          - origin: windows-msvc-x64
+            runner: windows-2022
+            arch: x86_64
+            compiler: msvc
+          - origin: linux-gcc-x64
+            runner: ubuntu-24.04
+            arch: x86_64
+            compiler: gcc
+          - origin: linux-clang-arm64
+            runner: ubuntu-24.04-arm
+            arch: arm64
+            compiler: clang
+          - origin: macos-clang-arm64
+            runner: macos-15
+            arch: arm64
+            compiler: clang
+          - origin: macos-clang-x64
+            runner: macos-15-intel
+            arch: x86_64
+            compiler: clang
+    steps:
+      - name: Checkout generic sources
+        id: sources
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Checkout unchanged upstream
+        id: upstream
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: erincatto/box3d
+          ref: 5d83df83ab47172c2c745b44315e7538ead02397
+          path: upstream
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Observe runner architecture and CPU
+        id: inventory
+        shell: python
+        run: |
+          import subprocess
+          subprocess.run(['python', '-B', 'ci.py', 'inventory', '--expected-arch', '${{ matrix.arch }}'], check=True)
+      - name: Build and run contact cache diagnostics
+        id: contactlab
+        if: ${{ !cancelled() && steps.sources.outcome == 'success' && steps.upstream.outcome == 'success' && steps.inventory.outcome == 'success' }}
+        continue-on-error: true
+        shell: python
+        run: |
+          import subprocess
+          subprocess.run(['python', '-B', 'contactlab_ci.py', 'run',
+                          '--origin', '${{ matrix.origin }}', '--compiler', '${{ matrix.compiler }}',
+                          '--config', 'RelWithDebInfo', '--simd', '0', '--workers', '1',
+                          '--parallel', '2', '--timeout', '900'], check=True)
+      - name: Require completed execution and quality gates
+        if: always()
+        shell: python
+        run: |
+          outcomes = {'sources': '${{ steps.sources.outcome }}',
+                      'upstream': '${{ steps.upstream.outcome }}',
+                      'inventory': '${{ steps.inventory.outcome }}',
+                      'contactlab': '${{ steps.contactlab.outcome }}'}
+          print({'step_outcomes': outcomes})
+          if any(value != 'success' for value in outcomes.values()):
+              raise SystemExit(1)
+
+  avx2:
+    needs: canonical
+    if: ${{ always() && !cancelled() && github.event.repository.visibility == 'public' && inputs.mode == 'full' }}
+    name: AVX2 / ${{ matrix.origin }} / SIMD8 / W1
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        include:
+          - origin: windows-msvc-x64
+            runner: windows-2022
+            arch: x86_64
+            compiler: msvc
+          - origin: linux-gcc-x64
+            runner: ubuntu-24.04
+            arch: x86_64
+            compiler: gcc
+          - origin: macos-clang-x64
+            runner: macos-15-intel
+            arch: x86_64
+            compiler: clang
+    steps:
+      - name: Checkout generic sources
+        id: sources
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Checkout unchanged upstream
+        id: upstream
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: erincatto/box3d
+          ref: 5d83df83ab47172c2c745b44315e7538ead02397
+          path: upstream
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Observe runner architecture and CPU
+        id: inventory
+        shell: python
+        run: |
+          import subprocess
+          subprocess.run(['python', '-B', 'ci.py', 'inventory', '--expected-arch', '${{ matrix.arch }}'], check=True)
+      - name: Build and run contact cache diagnostics
+        id: contactlab
+        if: ${{ !cancelled() && steps.sources.outcome == 'success' && steps.upstream.outcome == 'success' && steps.inventory.outcome == 'success' }}
+        continue-on-error: true
+        shell: python
+        run: |
+          import subprocess
+          subprocess.run(['python', '-B', 'contactlab_ci.py', 'run',
+                          '--origin', '${{ matrix.origin }}', '--compiler', '${{ matrix.compiler }}',
+                          '--config', 'RelWithDebInfo', '--simd', '8', '--workers', '1',
+                          '--parallel', '2', '--timeout', '900'], check=True)
+      - name: Require completed execution and quality gates
+        if: always()
+        shell: python
+        run: |
+          outcomes = {'sources': '${{ steps.sources.outcome }}',
+                      'upstream': '${{ steps.upstream.outcome }}',
+                      'inventory': '${{ steps.inventory.outcome }}',
+                      'contactlab': '${{ steps.contactlab.outcome }}'}
+          print({'step_outcomes': outcomes})
+          if any(value != 'success' for value in outcomes.values()):
+              raise SystemExit(1)
