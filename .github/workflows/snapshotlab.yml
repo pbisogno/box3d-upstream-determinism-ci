@@ -1,0 +1,1808 @@
+name: Snapshot transport and raw cost measurements
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Cross-origin transport and independent workload measurements
+        required: true
+        default: smoke
+        type: choice
+        options: [smoke, full]
+permissions:
+  contents: read
+concurrency:
+  group: snapshotlab-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  produce_gcc_x64_n64:
+    if: ${{ github.event.repository.visibility == 'public' && (inputs.mode == 'full' || (true)) }}
+    name: Produce / linux-gcc-x64 / 64 bodies
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    outputs:
+      bundle_meta: ${{ steps.native.outputs.bundle_meta }}
+      bundle_count: ${{ steps.native.outputs.bundle_count }}
+      bundle_00: ${{ steps.native.outputs.bundle_00 }}
+      bundle_01: ${{ steps.native.outputs.bundle_01 }}
+      bundle_02: ${{ steps.native.outputs.bundle_02 }}
+      bundle_03: ${{ steps.native.outputs.bundle_03 }}
+      bundle_04: ${{ steps.native.outputs.bundle_04 }}
+      bundle_05: ${{ steps.native.outputs.bundle_05 }}
+      bundle_06: ${{ steps.native.outputs.bundle_06 }}
+      bundle_07: ${{ steps.native.outputs.bundle_07 }}
+      bundle_08: ${{ steps.native.outputs.bundle_08 }}
+      bundle_09: ${{ steps.native.outputs.bundle_09 }}
+      bundle_10: ${{ steps.native.outputs.bundle_10 }}
+      bundle_11: ${{ steps.native.outputs.bundle_11 }}
+      bundle_12: ${{ steps.native.outputs.bundle_12 }}
+      bundle_13: ${{ steps.native.outputs.bundle_13 }}
+      bundle_14: ${{ steps.native.outputs.bundle_14 }}
+      bundle_15: ${{ steps.native.outputs.bundle_15 }}
+      bundle_16: ${{ steps.native.outputs.bundle_16 }}
+      bundle_17: ${{ steps.native.outputs.bundle_17 }}
+      bundle_18: ${{ steps.native.outputs.bundle_18 }}
+      bundle_19: ${{ steps.native.outputs.bundle_19 }}
+    steps:
+        - name: Checkout harness sources
+          uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+          with:
+            fetch-depth: 1
+            persist-credentials: false
+        - name: Checkout pinned upstream source
+          uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+          with:
+            repository: erincatto/box3d
+            ref: 5d83df83ab47172c2c745b44315e7538ead02397
+            path: upstream
+            fetch-depth: 1
+            persist-credentials: false
+        - name: Verify pinned public source and runner
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "ci.py", "inventory", "--expected-arch", "x86_64"], check=True)
+        - name: Produce the four public transport cases
+          id: native
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "snapshotlab_ci.py", "produce", "--profile", "linux-gcc-x64", "--compiler", "gcc", "--config", "RelWithDebInfo", "--simd", "4", "--workers", "1", "--bodies", "64", "--parallel", "2", "--timeout", "900"], check=True)
+  produce_gcc_x64_n256:
+    if: ${{ github.event.repository.visibility == 'public' && (inputs.mode == 'full' || (true)) }}
+    name: Produce / linux-gcc-x64 / 256 bodies
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    outputs:
+      bundle_meta: ${{ steps.native.outputs.bundle_meta }}
+      bundle_count: ${{ steps.native.outputs.bundle_count }}
+      bundle_00: ${{ steps.native.outputs.bundle_00 }}
+      bundle_01: ${{ steps.native.outputs.bundle_01 }}
+      bundle_02: ${{ steps.native.outputs.bundle_02 }}
+      bundle_03: ${{ steps.native.outputs.bundle_03 }}
+      bundle_04: ${{ steps.native.outputs.bundle_04 }}
+      bundle_05: ${{ steps.native.outputs.bundle_05 }}
+      bundle_06: ${{ steps.native.outputs.bundle_06 }}
+      bundle_07: ${{ steps.native.outputs.bundle_07 }}
+      bundle_08: ${{ steps.native.outputs.bundle_08 }}
+      bundle_09: ${{ steps.native.outputs.bundle_09 }}
+      bundle_10: ${{ steps.native.outputs.bundle_10 }}
+      bundle_11: ${{ steps.native.outputs.bundle_11 }}
+      bundle_12: ${{ steps.native.outputs.bundle_12 }}
+      bundle_13: ${{ steps.native.outputs.bundle_13 }}
+      bundle_14: ${{ steps.native.outputs.bundle_14 }}
+      bundle_15: ${{ steps.native.outputs.bundle_15 }}
+      bundle_16: ${{ steps.native.outputs.bundle_16 }}
+      bundle_17: ${{ steps.native.outputs.bundle_17 }}
+      bundle_18: ${{ steps.native.outputs.bundle_18 }}
+      bundle_19: ${{ steps.native.outputs.bundle_19 }}
+    steps:
+        - name: Checkout harness sources
+          uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+          with:
+            fetch-depth: 1
+            persist-credentials: false
+        - name: Checkout pinned upstream source
+          uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+          with:
+            repository: erincatto/box3d
+            ref: 5d83df83ab47172c2c745b44315e7538ead02397
+            path: upstream
+            fetch-depth: 1
+            persist-credentials: false
+        - name: Verify pinned public source and runner
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "ci.py", "inventory", "--expected-arch", "x86_64"], check=True)
+        - name: Produce the four public transport cases
+          id: native
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "snapshotlab_ci.py", "produce", "--profile", "linux-gcc-x64", "--compiler", "gcc", "--config", "RelWithDebInfo", "--simd", "4", "--workers", "1", "--bodies", "256", "--parallel", "2", "--timeout", "900"], check=True)
+  produce_clang_arm64_n64:
+    if: ${{ github.event.repository.visibility == 'public' && (inputs.mode == 'full' || (true)) }}
+    name: Produce / linux-clang-arm64 / 64 bodies
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    outputs:
+      bundle_meta: ${{ steps.native.outputs.bundle_meta }}
+      bundle_count: ${{ steps.native.outputs.bundle_count }}
+      bundle_00: ${{ steps.native.outputs.bundle_00 }}
+      bundle_01: ${{ steps.native.outputs.bundle_01 }}
+      bundle_02: ${{ steps.native.outputs.bundle_02 }}
+      bundle_03: ${{ steps.native.outputs.bundle_03 }}
+      bundle_04: ${{ steps.native.outputs.bundle_04 }}
+      bundle_05: ${{ steps.native.outputs.bundle_05 }}
+      bundle_06: ${{ steps.native.outputs.bundle_06 }}
+      bundle_07: ${{ steps.native.outputs.bundle_07 }}
+      bundle_08: ${{ steps.native.outputs.bundle_08 }}
+      bundle_09: ${{ steps.native.outputs.bundle_09 }}
+      bundle_10: ${{ steps.native.outputs.bundle_10 }}
+      bundle_11: ${{ steps.native.outputs.bundle_11 }}
+      bundle_12: ${{ steps.native.outputs.bundle_12 }}
+      bundle_13: ${{ steps.native.outputs.bundle_13 }}
+      bundle_14: ${{ steps.native.outputs.bundle_14 }}
+      bundle_15: ${{ steps.native.outputs.bundle_15 }}
+      bundle_16: ${{ steps.native.outputs.bundle_16 }}
+      bundle_17: ${{ steps.native.outputs.bundle_17 }}
+      bundle_18: ${{ steps.native.outputs.bundle_18 }}
+      bundle_19: ${{ steps.native.outputs.bundle_19 }}
+    steps:
+        - name: Checkout harness sources
+          uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+          with:
+            fetch-depth: 1
+            persist-credentials: false
+        - name: Checkout pinned upstream source
+          uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+          with:
+            repository: erincatto/box3d
+            ref: 5d83df83ab47172c2c745b44315e7538ead02397
+            path: upstream
+            fetch-depth: 1
+            persist-credentials: false
+        - name: Verify pinned public source and runner
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "ci.py", "inventory", "--expected-arch", "arm64"], check=True)
+        - name: Produce the four public transport cases
+          id: native
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "snapshotlab_ci.py", "produce", "--profile", "linux-clang-arm64", "--compiler", "clang", "--config", "RelWithDebInfo", "--simd", "4", "--workers", "1", "--bodies", "64", "--parallel", "2", "--timeout", "900"], check=True)
+  produce_clang_arm64_n256:
+    if: ${{ github.event.repository.visibility == 'public' && (inputs.mode == 'full' || (true)) }}
+    name: Produce / linux-clang-arm64 / 256 bodies
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    outputs:
+      bundle_meta: ${{ steps.native.outputs.bundle_meta }}
+      bundle_count: ${{ steps.native.outputs.bundle_count }}
+      bundle_00: ${{ steps.native.outputs.bundle_00 }}
+      bundle_01: ${{ steps.native.outputs.bundle_01 }}
+      bundle_02: ${{ steps.native.outputs.bundle_02 }}
+      bundle_03: ${{ steps.native.outputs.bundle_03 }}
+      bundle_04: ${{ steps.native.outputs.bundle_04 }}
+      bundle_05: ${{ steps.native.outputs.bundle_05 }}
+      bundle_06: ${{ steps.native.outputs.bundle_06 }}
+      bundle_07: ${{ steps.native.outputs.bundle_07 }}
+      bundle_08: ${{ steps.native.outputs.bundle_08 }}
+      bundle_09: ${{ steps.native.outputs.bundle_09 }}
+      bundle_10: ${{ steps.native.outputs.bundle_10 }}
+      bundle_11: ${{ steps.native.outputs.bundle_11 }}
+      bundle_12: ${{ steps.native.outputs.bundle_12 }}
+      bundle_13: ${{ steps.native.outputs.bundle_13 }}
+      bundle_14: ${{ steps.native.outputs.bundle_14 }}
+      bundle_15: ${{ steps.native.outputs.bundle_15 }}
+      bundle_16: ${{ steps.native.outputs.bundle_16 }}
+      bundle_17: ${{ steps.native.outputs.bundle_17 }}
+      bundle_18: ${{ steps.native.outputs.bundle_18 }}
+      bundle_19: ${{ steps.native.outputs.bundle_19 }}
+    steps:
+        - name: Checkout harness sources
+          uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+          with:
+            fetch-depth: 1
+            persist-credentials: false
+        - name: Checkout pinned upstream source
+          uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+          with:
+            repository: erincatto/box3d
+            ref: 5d83df83ab47172c2c745b44315e7538ead02397
+            path: upstream
+            fetch-depth: 1
+            persist-credentials: false
+        - name: Verify pinned public source and runner
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "ci.py", "inventory", "--expected-arch", "arm64"], check=True)
+        - name: Produce the four public transport cases
+          id: native
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "snapshotlab_ci.py", "produce", "--profile", "linux-clang-arm64", "--compiler", "clang", "--config", "RelWithDebInfo", "--simd", "4", "--workers", "1", "--bodies", "256", "--parallel", "2", "--timeout", "900"], check=True)
+  produce_msvc_x64_n64:
+    if: ${{ github.event.repository.visibility == 'public' && (inputs.mode == 'full' || (inputs.mode == 'full')) }}
+    name: Produce / windows-msvc-x64 / 64 bodies
+    runs-on: windows-2022
+    timeout-minutes: 30
+    outputs:
+      bundle_meta: ${{ steps.native.outputs.bundle_meta }}
+      bundle_count: ${{ steps.native.outputs.bundle_count }}
+      bundle_00: ${{ steps.native.outputs.bundle_00 }}
+      bundle_01: ${{ steps.native.outputs.bundle_01 }}
+      bundle_02: ${{ steps.native.outputs.bundle_02 }}
+      bundle_03: ${{ steps.native.outputs.bundle_03 }}
+      bundle_04: ${{ steps.native.outputs.bundle_04 }}
+      bundle_05: ${{ steps.native.outputs.bundle_05 }}
+      bundle_06: ${{ steps.native.outputs.bundle_06 }}
+      bundle_07: ${{ steps.native.outputs.bundle_07 }}
+      bundle_08: ${{ steps.native.outputs.bundle_08 }}
+      bundle_09: ${{ steps.native.outputs.bundle_09 }}
+      bundle_10: ${{ steps.native.outputs.bundle_10 }}
+      bundle_11: ${{ steps.native.outputs.bundle_11 }}
+      bundle_12: ${{ steps.native.outputs.bundle_12 }}
+      bundle_13: ${{ steps.native.outputs.bundle_13 }}
+      bundle_14: ${{ steps.native.outputs.bundle_14 }}
+      bundle_15: ${{ steps.native.outputs.bundle_15 }}
+      bundle_16: ${{ steps.native.outputs.bundle_16 }}
+      bundle_17: ${{ steps.native.outputs.bundle_17 }}
+      bundle_18: ${{ steps.native.outputs.bundle_18 }}
+      bundle_19: ${{ steps.native.outputs.bundle_19 }}
+    steps:
+        - name: Checkout harness sources
+          uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+          with:
+            fetch-depth: 1
+            persist-credentials: false
+        - name: Checkout pinned upstream source
+          uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+          with:
+            repository: erincatto/box3d
+            ref: 5d83df83ab47172c2c745b44315e7538ead02397
+            path: upstream
+            fetch-depth: 1
+            persist-credentials: false
+        - name: Verify pinned public source and runner
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "ci.py", "inventory", "--expected-arch", "x86_64"], check=True)
+        - name: Produce the four public transport cases
+          id: native
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "snapshotlab_ci.py", "produce", "--profile", "windows-msvc-x64", "--compiler", "msvc", "--config", "RelWithDebInfo", "--simd", "4", "--workers", "1", "--bodies", "64", "--parallel", "2", "--timeout", "900"], check=True)
+  produce_msvc_x64_n256:
+    if: ${{ github.event.repository.visibility == 'public' && (inputs.mode == 'full' || (inputs.mode == 'full')) }}
+    name: Produce / windows-msvc-x64 / 256 bodies
+    runs-on: windows-2022
+    timeout-minutes: 30
+    outputs:
+      bundle_meta: ${{ steps.native.outputs.bundle_meta }}
+      bundle_count: ${{ steps.native.outputs.bundle_count }}
+      bundle_00: ${{ steps.native.outputs.bundle_00 }}
+      bundle_01: ${{ steps.native.outputs.bundle_01 }}
+      bundle_02: ${{ steps.native.outputs.bundle_02 }}
+      bundle_03: ${{ steps.native.outputs.bundle_03 }}
+      bundle_04: ${{ steps.native.outputs.bundle_04 }}
+      bundle_05: ${{ steps.native.outputs.bundle_05 }}
+      bundle_06: ${{ steps.native.outputs.bundle_06 }}
+      bundle_07: ${{ steps.native.outputs.bundle_07 }}
+      bundle_08: ${{ steps.native.outputs.bundle_08 }}
+      bundle_09: ${{ steps.native.outputs.bundle_09 }}
+      bundle_10: ${{ steps.native.outputs.bundle_10 }}
+      bundle_11: ${{ steps.native.outputs.bundle_11 }}
+      bundle_12: ${{ steps.native.outputs.bundle_12 }}
+      bundle_13: ${{ steps.native.outputs.bundle_13 }}
+      bundle_14: ${{ steps.native.outputs.bundle_14 }}
+      bundle_15: ${{ steps.native.outputs.bundle_15 }}
+      bundle_16: ${{ steps.native.outputs.bundle_16 }}
+      bundle_17: ${{ steps.native.outputs.bundle_17 }}
+      bundle_18: ${{ steps.native.outputs.bundle_18 }}
+      bundle_19: ${{ steps.native.outputs.bundle_19 }}
+    steps:
+        - name: Checkout harness sources
+          uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+          with:
+            fetch-depth: 1
+            persist-credentials: false
+        - name: Checkout pinned upstream source
+          uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+          with:
+            repository: erincatto/box3d
+            ref: 5d83df83ab47172c2c745b44315e7538ead02397
+            path: upstream
+            fetch-depth: 1
+            persist-credentials: false
+        - name: Verify pinned public source and runner
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "ci.py", "inventory", "--expected-arch", "x86_64"], check=True)
+        - name: Produce the four public transport cases
+          id: native
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "snapshotlab_ci.py", "produce", "--profile", "windows-msvc-x64", "--compiler", "msvc", "--config", "RelWithDebInfo", "--simd", "4", "--workers", "1", "--bodies", "256", "--parallel", "2", "--timeout", "900"], check=True)
+  produce_macos_arm64_n64:
+    if: ${{ github.event.repository.visibility == 'public' && (inputs.mode == 'full' || (inputs.mode == 'full')) }}
+    name: Produce / macos-clang-arm64 / 64 bodies
+    runs-on: macos-15
+    timeout-minutes: 30
+    outputs:
+      bundle_meta: ${{ steps.native.outputs.bundle_meta }}
+      bundle_count: ${{ steps.native.outputs.bundle_count }}
+      bundle_00: ${{ steps.native.outputs.bundle_00 }}
+      bundle_01: ${{ steps.native.outputs.bundle_01 }}
+      bundle_02: ${{ steps.native.outputs.bundle_02 }}
+      bundle_03: ${{ steps.native.outputs.bundle_03 }}
+      bundle_04: ${{ steps.native.outputs.bundle_04 }}
+      bundle_05: ${{ steps.native.outputs.bundle_05 }}
+      bundle_06: ${{ steps.native.outputs.bundle_06 }}
+      bundle_07: ${{ steps.native.outputs.bundle_07 }}
+      bundle_08: ${{ steps.native.outputs.bundle_08 }}
+      bundle_09: ${{ steps.native.outputs.bundle_09 }}
+      bundle_10: ${{ steps.native.outputs.bundle_10 }}
+      bundle_11: ${{ steps.native.outputs.bundle_11 }}
+      bundle_12: ${{ steps.native.outputs.bundle_12 }}
+      bundle_13: ${{ steps.native.outputs.bundle_13 }}
+      bundle_14: ${{ steps.native.outputs.bundle_14 }}
+      bundle_15: ${{ steps.native.outputs.bundle_15 }}
+      bundle_16: ${{ steps.native.outputs.bundle_16 }}
+      bundle_17: ${{ steps.native.outputs.bundle_17 }}
+      bundle_18: ${{ steps.native.outputs.bundle_18 }}
+      bundle_19: ${{ steps.native.outputs.bundle_19 }}
+    steps:
+        - name: Checkout harness sources
+          uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+          with:
+            fetch-depth: 1
+            persist-credentials: false
+        - name: Checkout pinned upstream source
+          uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+          with:
+            repository: erincatto/box3d
+            ref: 5d83df83ab47172c2c745b44315e7538ead02397
+            path: upstream
+            fetch-depth: 1
+            persist-credentials: false
+        - name: Verify pinned public source and runner
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "ci.py", "inventory", "--expected-arch", "arm64"], check=True)
+        - name: Produce the four public transport cases
+          id: native
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "snapshotlab_ci.py", "produce", "--profile", "macos-clang-arm64", "--compiler", "clang", "--config", "RelWithDebInfo", "--simd", "4", "--workers", "1", "--bodies", "64", "--parallel", "2", "--timeout", "900"], check=True)
+  produce_macos_arm64_n256:
+    if: ${{ github.event.repository.visibility == 'public' && (inputs.mode == 'full' || (inputs.mode == 'full')) }}
+    name: Produce / macos-clang-arm64 / 256 bodies
+    runs-on: macos-15
+    timeout-minutes: 30
+    outputs:
+      bundle_meta: ${{ steps.native.outputs.bundle_meta }}
+      bundle_count: ${{ steps.native.outputs.bundle_count }}
+      bundle_00: ${{ steps.native.outputs.bundle_00 }}
+      bundle_01: ${{ steps.native.outputs.bundle_01 }}
+      bundle_02: ${{ steps.native.outputs.bundle_02 }}
+      bundle_03: ${{ steps.native.outputs.bundle_03 }}
+      bundle_04: ${{ steps.native.outputs.bundle_04 }}
+      bundle_05: ${{ steps.native.outputs.bundle_05 }}
+      bundle_06: ${{ steps.native.outputs.bundle_06 }}
+      bundle_07: ${{ steps.native.outputs.bundle_07 }}
+      bundle_08: ${{ steps.native.outputs.bundle_08 }}
+      bundle_09: ${{ steps.native.outputs.bundle_09 }}
+      bundle_10: ${{ steps.native.outputs.bundle_10 }}
+      bundle_11: ${{ steps.native.outputs.bundle_11 }}
+      bundle_12: ${{ steps.native.outputs.bundle_12 }}
+      bundle_13: ${{ steps.native.outputs.bundle_13 }}
+      bundle_14: ${{ steps.native.outputs.bundle_14 }}
+      bundle_15: ${{ steps.native.outputs.bundle_15 }}
+      bundle_16: ${{ steps.native.outputs.bundle_16 }}
+      bundle_17: ${{ steps.native.outputs.bundle_17 }}
+      bundle_18: ${{ steps.native.outputs.bundle_18 }}
+      bundle_19: ${{ steps.native.outputs.bundle_19 }}
+    steps:
+        - name: Checkout harness sources
+          uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+          with:
+            fetch-depth: 1
+            persist-credentials: false
+        - name: Checkout pinned upstream source
+          uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+          with:
+            repository: erincatto/box3d
+            ref: 5d83df83ab47172c2c745b44315e7538ead02397
+            path: upstream
+            fetch-depth: 1
+            persist-credentials: false
+        - name: Verify pinned public source and runner
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "ci.py", "inventory", "--expected-arch", "arm64"], check=True)
+        - name: Produce the four public transport cases
+          id: native
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "snapshotlab_ci.py", "produce", "--profile", "macos-clang-arm64", "--compiler", "clang", "--config", "RelWithDebInfo", "--simd", "4", "--workers", "1", "--bodies", "256", "--parallel", "2", "--timeout", "900"], check=True)
+  consume_gcc_x64_n64:
+    needs: [produce_gcc_x64_n64, produce_clang_arm64_n64, produce_msvc_x64_n64, produce_macos_arm64_n64]
+    if: ${{ always() && !cancelled() && github.event.repository.visibility == 'public' && (inputs.mode == 'full' || (inputs.mode == 'smoke' && (true))) }}
+    name: Consume / linux-gcc-x64 / 64 bodies
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+        - name: Checkout harness sources
+          uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+          with:
+            fetch-depth: 1
+            persist-credentials: false
+        - name: Checkout pinned upstream source
+          uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+          with:
+            repository: erincatto/box3d
+            ref: 5d83df83ab47172c2c745b44315e7538ead02397
+            path: upstream
+            fetch-depth: 1
+            persist-credentials: false
+        - name: Verify pinned public source and runner
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "ci.py", "inventory", "--expected-arch", "x86_64"], check=True)
+        - name: Receive bundle from linux-gcc-x64
+          id: receive_gcc_x64
+          if: ${{ !cancelled() && github.event.repository.visibility == 'public' && (true) && needs.produce_gcc_x64_n64.result == 'success' }}
+          env:
+            SNAPSHOTLAB_BUNDLE_META: ${{ needs.produce_gcc_x64_n64.outputs.bundle_meta }}
+            SNAPSHOTLAB_BUNDLE_COUNT: ${{ needs.produce_gcc_x64_n64.outputs.bundle_count }}
+            SNAPSHOTLAB_BUNDLE_00: ${{ needs.produce_gcc_x64_n64.outputs.bundle_00 }}
+            SNAPSHOTLAB_BUNDLE_01: ${{ needs.produce_gcc_x64_n64.outputs.bundle_01 }}
+            SNAPSHOTLAB_BUNDLE_02: ${{ needs.produce_gcc_x64_n64.outputs.bundle_02 }}
+            SNAPSHOTLAB_BUNDLE_03: ${{ needs.produce_gcc_x64_n64.outputs.bundle_03 }}
+            SNAPSHOTLAB_BUNDLE_04: ${{ needs.produce_gcc_x64_n64.outputs.bundle_04 }}
+            SNAPSHOTLAB_BUNDLE_05: ${{ needs.produce_gcc_x64_n64.outputs.bundle_05 }}
+            SNAPSHOTLAB_BUNDLE_06: ${{ needs.produce_gcc_x64_n64.outputs.bundle_06 }}
+            SNAPSHOTLAB_BUNDLE_07: ${{ needs.produce_gcc_x64_n64.outputs.bundle_07 }}
+            SNAPSHOTLAB_BUNDLE_08: ${{ needs.produce_gcc_x64_n64.outputs.bundle_08 }}
+            SNAPSHOTLAB_BUNDLE_09: ${{ needs.produce_gcc_x64_n64.outputs.bundle_09 }}
+            SNAPSHOTLAB_BUNDLE_10: ${{ needs.produce_gcc_x64_n64.outputs.bundle_10 }}
+            SNAPSHOTLAB_BUNDLE_11: ${{ needs.produce_gcc_x64_n64.outputs.bundle_11 }}
+            SNAPSHOTLAB_BUNDLE_12: ${{ needs.produce_gcc_x64_n64.outputs.bundle_12 }}
+            SNAPSHOTLAB_BUNDLE_13: ${{ needs.produce_gcc_x64_n64.outputs.bundle_13 }}
+            SNAPSHOTLAB_BUNDLE_14: ${{ needs.produce_gcc_x64_n64.outputs.bundle_14 }}
+            SNAPSHOTLAB_BUNDLE_15: ${{ needs.produce_gcc_x64_n64.outputs.bundle_15 }}
+            SNAPSHOTLAB_BUNDLE_16: ${{ needs.produce_gcc_x64_n64.outputs.bundle_16 }}
+            SNAPSHOTLAB_BUNDLE_17: ${{ needs.produce_gcc_x64_n64.outputs.bundle_17 }}
+            SNAPSHOTLAB_BUNDLE_18: ${{ needs.produce_gcc_x64_n64.outputs.bundle_18 }}
+            SNAPSHOTLAB_BUNDLE_19: ${{ needs.produce_gcc_x64_n64.outputs.bundle_19 }}
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "snapshotlab_ci.py", "receive", "--source-profile", "linux-gcc-x64", "--bodies", "64"], check=True)
+        - name: Receive bundle from linux-clang-arm64
+          id: receive_clang_arm64
+          if: ${{ !cancelled() && github.event.repository.visibility == 'public' && (true) && needs.produce_clang_arm64_n64.result == 'success' }}
+          env:
+            SNAPSHOTLAB_BUNDLE_META: ${{ needs.produce_clang_arm64_n64.outputs.bundle_meta }}
+            SNAPSHOTLAB_BUNDLE_COUNT: ${{ needs.produce_clang_arm64_n64.outputs.bundle_count }}
+            SNAPSHOTLAB_BUNDLE_00: ${{ needs.produce_clang_arm64_n64.outputs.bundle_00 }}
+            SNAPSHOTLAB_BUNDLE_01: ${{ needs.produce_clang_arm64_n64.outputs.bundle_01 }}
+            SNAPSHOTLAB_BUNDLE_02: ${{ needs.produce_clang_arm64_n64.outputs.bundle_02 }}
+            SNAPSHOTLAB_BUNDLE_03: ${{ needs.produce_clang_arm64_n64.outputs.bundle_03 }}
+            SNAPSHOTLAB_BUNDLE_04: ${{ needs.produce_clang_arm64_n64.outputs.bundle_04 }}
+            SNAPSHOTLAB_BUNDLE_05: ${{ needs.produce_clang_arm64_n64.outputs.bundle_05 }}
+            SNAPSHOTLAB_BUNDLE_06: ${{ needs.produce_clang_arm64_n64.outputs.bundle_06 }}
+            SNAPSHOTLAB_BUNDLE_07: ${{ needs.produce_clang_arm64_n64.outputs.bundle_07 }}
+            SNAPSHOTLAB_BUNDLE_08: ${{ needs.produce_clang_arm64_n64.outputs.bundle_08 }}
+            SNAPSHOTLAB_BUNDLE_09: ${{ needs.produce_clang_arm64_n64.outputs.bundle_09 }}
+            SNAPSHOTLAB_BUNDLE_10: ${{ needs.produce_clang_arm64_n64.outputs.bundle_10 }}
+            SNAPSHOTLAB_BUNDLE_11: ${{ needs.produce_clang_arm64_n64.outputs.bundle_11 }}
+            SNAPSHOTLAB_BUNDLE_12: ${{ needs.produce_clang_arm64_n64.outputs.bundle_12 }}
+            SNAPSHOTLAB_BUNDLE_13: ${{ needs.produce_clang_arm64_n64.outputs.bundle_13 }}
+            SNAPSHOTLAB_BUNDLE_14: ${{ needs.produce_clang_arm64_n64.outputs.bundle_14 }}
+            SNAPSHOTLAB_BUNDLE_15: ${{ needs.produce_clang_arm64_n64.outputs.bundle_15 }}
+            SNAPSHOTLAB_BUNDLE_16: ${{ needs.produce_clang_arm64_n64.outputs.bundle_16 }}
+            SNAPSHOTLAB_BUNDLE_17: ${{ needs.produce_clang_arm64_n64.outputs.bundle_17 }}
+            SNAPSHOTLAB_BUNDLE_18: ${{ needs.produce_clang_arm64_n64.outputs.bundle_18 }}
+            SNAPSHOTLAB_BUNDLE_19: ${{ needs.produce_clang_arm64_n64.outputs.bundle_19 }}
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "snapshotlab_ci.py", "receive", "--source-profile", "linux-clang-arm64", "--bodies", "64"], check=True)
+        - name: Receive bundle from windows-msvc-x64
+          id: receive_msvc_x64
+          if: ${{ !cancelled() && github.event.repository.visibility == 'public' && (inputs.mode == 'full') && needs.produce_msvc_x64_n64.result == 'success' }}
+          env:
+            SNAPSHOTLAB_BUNDLE_META: ${{ needs.produce_msvc_x64_n64.outputs.bundle_meta }}
+            SNAPSHOTLAB_BUNDLE_COUNT: ${{ needs.produce_msvc_x64_n64.outputs.bundle_count }}
+            SNAPSHOTLAB_BUNDLE_00: ${{ needs.produce_msvc_x64_n64.outputs.bundle_00 }}
+            SNAPSHOTLAB_BUNDLE_01: ${{ needs.produce_msvc_x64_n64.outputs.bundle_01 }}
+            SNAPSHOTLAB_BUNDLE_02: ${{ needs.produce_msvc_x64_n64.outputs.bundle_02 }}
+            SNAPSHOTLAB_BUNDLE_03: ${{ needs.produce_msvc_x64_n64.outputs.bundle_03 }}
+            SNAPSHOTLAB_BUNDLE_04: ${{ needs.produce_msvc_x64_n64.outputs.bundle_04 }}
+            SNAPSHOTLAB_BUNDLE_05: ${{ needs.produce_msvc_x64_n64.outputs.bundle_05 }}
+            SNAPSHOTLAB_BUNDLE_06: ${{ needs.produce_msvc_x64_n64.outputs.bundle_06 }}
+            SNAPSHOTLAB_BUNDLE_07: ${{ needs.produce_msvc_x64_n64.outputs.bundle_07 }}
+            SNAPSHOTLAB_BUNDLE_08: ${{ needs.produce_msvc_x64_n64.outputs.bundle_08 }}
+            SNAPSHOTLAB_BUNDLE_09: ${{ needs.produce_msvc_x64_n64.outputs.bundle_09 }}
+            SNAPSHOTLAB_BUNDLE_10: ${{ needs.produce_msvc_x64_n64.outputs.bundle_10 }}
+            SNAPSHOTLAB_BUNDLE_11: ${{ needs.produce_msvc_x64_n64.outputs.bundle_11 }}
+            SNAPSHOTLAB_BUNDLE_12: ${{ needs.produce_msvc_x64_n64.outputs.bundle_12 }}
+            SNAPSHOTLAB_BUNDLE_13: ${{ needs.produce_msvc_x64_n64.outputs.bundle_13 }}
+            SNAPSHOTLAB_BUNDLE_14: ${{ needs.produce_msvc_x64_n64.outputs.bundle_14 }}
+            SNAPSHOTLAB_BUNDLE_15: ${{ needs.produce_msvc_x64_n64.outputs.bundle_15 }}
+            SNAPSHOTLAB_BUNDLE_16: ${{ needs.produce_msvc_x64_n64.outputs.bundle_16 }}
+            SNAPSHOTLAB_BUNDLE_17: ${{ needs.produce_msvc_x64_n64.outputs.bundle_17 }}
+            SNAPSHOTLAB_BUNDLE_18: ${{ needs.produce_msvc_x64_n64.outputs.bundle_18 }}
+            SNAPSHOTLAB_BUNDLE_19: ${{ needs.produce_msvc_x64_n64.outputs.bundle_19 }}
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "snapshotlab_ci.py", "receive", "--source-profile", "windows-msvc-x64", "--bodies", "64"], check=True)
+        - name: Receive bundle from macos-clang-arm64
+          id: receive_macos_arm64
+          if: ${{ !cancelled() && github.event.repository.visibility == 'public' && (inputs.mode == 'full') && needs.produce_macos_arm64_n64.result == 'success' }}
+          env:
+            SNAPSHOTLAB_BUNDLE_META: ${{ needs.produce_macos_arm64_n64.outputs.bundle_meta }}
+            SNAPSHOTLAB_BUNDLE_COUNT: ${{ needs.produce_macos_arm64_n64.outputs.bundle_count }}
+            SNAPSHOTLAB_BUNDLE_00: ${{ needs.produce_macos_arm64_n64.outputs.bundle_00 }}
+            SNAPSHOTLAB_BUNDLE_01: ${{ needs.produce_macos_arm64_n64.outputs.bundle_01 }}
+            SNAPSHOTLAB_BUNDLE_02: ${{ needs.produce_macos_arm64_n64.outputs.bundle_02 }}
+            SNAPSHOTLAB_BUNDLE_03: ${{ needs.produce_macos_arm64_n64.outputs.bundle_03 }}
+            SNAPSHOTLAB_BUNDLE_04: ${{ needs.produce_macos_arm64_n64.outputs.bundle_04 }}
+            SNAPSHOTLAB_BUNDLE_05: ${{ needs.produce_macos_arm64_n64.outputs.bundle_05 }}
+            SNAPSHOTLAB_BUNDLE_06: ${{ needs.produce_macos_arm64_n64.outputs.bundle_06 }}
+            SNAPSHOTLAB_BUNDLE_07: ${{ needs.produce_macos_arm64_n64.outputs.bundle_07 }}
+            SNAPSHOTLAB_BUNDLE_08: ${{ needs.produce_macos_arm64_n64.outputs.bundle_08 }}
+            SNAPSHOTLAB_BUNDLE_09: ${{ needs.produce_macos_arm64_n64.outputs.bundle_09 }}
+            SNAPSHOTLAB_BUNDLE_10: ${{ needs.produce_macos_arm64_n64.outputs.bundle_10 }}
+            SNAPSHOTLAB_BUNDLE_11: ${{ needs.produce_macos_arm64_n64.outputs.bundle_11 }}
+            SNAPSHOTLAB_BUNDLE_12: ${{ needs.produce_macos_arm64_n64.outputs.bundle_12 }}
+            SNAPSHOTLAB_BUNDLE_13: ${{ needs.produce_macos_arm64_n64.outputs.bundle_13 }}
+            SNAPSHOTLAB_BUNDLE_14: ${{ needs.produce_macos_arm64_n64.outputs.bundle_14 }}
+            SNAPSHOTLAB_BUNDLE_15: ${{ needs.produce_macos_arm64_n64.outputs.bundle_15 }}
+            SNAPSHOTLAB_BUNDLE_16: ${{ needs.produce_macos_arm64_n64.outputs.bundle_16 }}
+            SNAPSHOTLAB_BUNDLE_17: ${{ needs.produce_macos_arm64_n64.outputs.bundle_17 }}
+            SNAPSHOTLAB_BUNDLE_18: ${{ needs.produce_macos_arm64_n64.outputs.bundle_18 }}
+            SNAPSHOTLAB_BUNDLE_19: ${{ needs.produce_macos_arm64_n64.outputs.bundle_19 }}
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "snapshotlab_ci.py", "receive", "--source-profile", "macos-clang-arm64", "--bodies", "64"], check=True)
+        - name: Consume every available source case
+          if: ${{ !cancelled() && github.event.repository.visibility == 'public' && (inputs.mode == 'full' || inputs.mode == 'smoke') }}
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "snapshotlab_ci.py", "consume", "--profile", "linux-gcc-x64", "--compiler", "gcc", "--config", "RelWithDebInfo", "--simd", "4", "--workers", "1", "--bodies", "64", "--mode", "${{ inputs.mode }}", "--parallel", "2", "--timeout", "900"], check=True)
+  consume_gcc_x64_n256:
+    needs: [produce_gcc_x64_n256, produce_clang_arm64_n256, produce_msvc_x64_n256, produce_macos_arm64_n256]
+    if: ${{ always() && !cancelled() && github.event.repository.visibility == 'public' && (inputs.mode == 'full' || (inputs.mode == 'smoke' && (true))) }}
+    name: Consume / linux-gcc-x64 / 256 bodies
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+        - name: Checkout harness sources
+          uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+          with:
+            fetch-depth: 1
+            persist-credentials: false
+        - name: Checkout pinned upstream source
+          uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+          with:
+            repository: erincatto/box3d
+            ref: 5d83df83ab47172c2c745b44315e7538ead02397
+            path: upstream
+            fetch-depth: 1
+            persist-credentials: false
+        - name: Verify pinned public source and runner
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "ci.py", "inventory", "--expected-arch", "x86_64"], check=True)
+        - name: Receive bundle from linux-gcc-x64
+          id: receive_gcc_x64
+          if: ${{ !cancelled() && github.event.repository.visibility == 'public' && (true) && needs.produce_gcc_x64_n256.result == 'success' }}
+          env:
+            SNAPSHOTLAB_BUNDLE_META: ${{ needs.produce_gcc_x64_n256.outputs.bundle_meta }}
+            SNAPSHOTLAB_BUNDLE_COUNT: ${{ needs.produce_gcc_x64_n256.outputs.bundle_count }}
+            SNAPSHOTLAB_BUNDLE_00: ${{ needs.produce_gcc_x64_n256.outputs.bundle_00 }}
+            SNAPSHOTLAB_BUNDLE_01: ${{ needs.produce_gcc_x64_n256.outputs.bundle_01 }}
+            SNAPSHOTLAB_BUNDLE_02: ${{ needs.produce_gcc_x64_n256.outputs.bundle_02 }}
+            SNAPSHOTLAB_BUNDLE_03: ${{ needs.produce_gcc_x64_n256.outputs.bundle_03 }}
+            SNAPSHOTLAB_BUNDLE_04: ${{ needs.produce_gcc_x64_n256.outputs.bundle_04 }}
+            SNAPSHOTLAB_BUNDLE_05: ${{ needs.produce_gcc_x64_n256.outputs.bundle_05 }}
+            SNAPSHOTLAB_BUNDLE_06: ${{ needs.produce_gcc_x64_n256.outputs.bundle_06 }}
+            SNAPSHOTLAB_BUNDLE_07: ${{ needs.produce_gcc_x64_n256.outputs.bundle_07 }}
+            SNAPSHOTLAB_BUNDLE_08: ${{ needs.produce_gcc_x64_n256.outputs.bundle_08 }}
+            SNAPSHOTLAB_BUNDLE_09: ${{ needs.produce_gcc_x64_n256.outputs.bundle_09 }}
+            SNAPSHOTLAB_BUNDLE_10: ${{ needs.produce_gcc_x64_n256.outputs.bundle_10 }}
+            SNAPSHOTLAB_BUNDLE_11: ${{ needs.produce_gcc_x64_n256.outputs.bundle_11 }}
+            SNAPSHOTLAB_BUNDLE_12: ${{ needs.produce_gcc_x64_n256.outputs.bundle_12 }}
+            SNAPSHOTLAB_BUNDLE_13: ${{ needs.produce_gcc_x64_n256.outputs.bundle_13 }}
+            SNAPSHOTLAB_BUNDLE_14: ${{ needs.produce_gcc_x64_n256.outputs.bundle_14 }}
+            SNAPSHOTLAB_BUNDLE_15: ${{ needs.produce_gcc_x64_n256.outputs.bundle_15 }}
+            SNAPSHOTLAB_BUNDLE_16: ${{ needs.produce_gcc_x64_n256.outputs.bundle_16 }}
+            SNAPSHOTLAB_BUNDLE_17: ${{ needs.produce_gcc_x64_n256.outputs.bundle_17 }}
+            SNAPSHOTLAB_BUNDLE_18: ${{ needs.produce_gcc_x64_n256.outputs.bundle_18 }}
+            SNAPSHOTLAB_BUNDLE_19: ${{ needs.produce_gcc_x64_n256.outputs.bundle_19 }}
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "snapshotlab_ci.py", "receive", "--source-profile", "linux-gcc-x64", "--bodies", "256"], check=True)
+        - name: Receive bundle from linux-clang-arm64
+          id: receive_clang_arm64
+          if: ${{ !cancelled() && github.event.repository.visibility == 'public' && (true) && needs.produce_clang_arm64_n256.result == 'success' }}
+          env:
+            SNAPSHOTLAB_BUNDLE_META: ${{ needs.produce_clang_arm64_n256.outputs.bundle_meta }}
+            SNAPSHOTLAB_BUNDLE_COUNT: ${{ needs.produce_clang_arm64_n256.outputs.bundle_count }}
+            SNAPSHOTLAB_BUNDLE_00: ${{ needs.produce_clang_arm64_n256.outputs.bundle_00 }}
+            SNAPSHOTLAB_BUNDLE_01: ${{ needs.produce_clang_arm64_n256.outputs.bundle_01 }}
+            SNAPSHOTLAB_BUNDLE_02: ${{ needs.produce_clang_arm64_n256.outputs.bundle_02 }}
+            SNAPSHOTLAB_BUNDLE_03: ${{ needs.produce_clang_arm64_n256.outputs.bundle_03 }}
+            SNAPSHOTLAB_BUNDLE_04: ${{ needs.produce_clang_arm64_n256.outputs.bundle_04 }}
+            SNAPSHOTLAB_BUNDLE_05: ${{ needs.produce_clang_arm64_n256.outputs.bundle_05 }}
+            SNAPSHOTLAB_BUNDLE_06: ${{ needs.produce_clang_arm64_n256.outputs.bundle_06 }}
+            SNAPSHOTLAB_BUNDLE_07: ${{ needs.produce_clang_arm64_n256.outputs.bundle_07 }}
+            SNAPSHOTLAB_BUNDLE_08: ${{ needs.produce_clang_arm64_n256.outputs.bundle_08 }}
+            SNAPSHOTLAB_BUNDLE_09: ${{ needs.produce_clang_arm64_n256.outputs.bundle_09 }}
+            SNAPSHOTLAB_BUNDLE_10: ${{ needs.produce_clang_arm64_n256.outputs.bundle_10 }}
+            SNAPSHOTLAB_BUNDLE_11: ${{ needs.produce_clang_arm64_n256.outputs.bundle_11 }}
+            SNAPSHOTLAB_BUNDLE_12: ${{ needs.produce_clang_arm64_n256.outputs.bundle_12 }}
+            SNAPSHOTLAB_BUNDLE_13: ${{ needs.produce_clang_arm64_n256.outputs.bundle_13 }}
+            SNAPSHOTLAB_BUNDLE_14: ${{ needs.produce_clang_arm64_n256.outputs.bundle_14 }}
+            SNAPSHOTLAB_BUNDLE_15: ${{ needs.produce_clang_arm64_n256.outputs.bundle_15 }}
+            SNAPSHOTLAB_BUNDLE_16: ${{ needs.produce_clang_arm64_n256.outputs.bundle_16 }}
+            SNAPSHOTLAB_BUNDLE_17: ${{ needs.produce_clang_arm64_n256.outputs.bundle_17 }}
+            SNAPSHOTLAB_BUNDLE_18: ${{ needs.produce_clang_arm64_n256.outputs.bundle_18 }}
+            SNAPSHOTLAB_BUNDLE_19: ${{ needs.produce_clang_arm64_n256.outputs.bundle_19 }}
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "snapshotlab_ci.py", "receive", "--source-profile", "linux-clang-arm64", "--bodies", "256"], check=True)
+        - name: Receive bundle from windows-msvc-x64
+          id: receive_msvc_x64
+          if: ${{ !cancelled() && github.event.repository.visibility == 'public' && (inputs.mode == 'full') && needs.produce_msvc_x64_n256.result == 'success' }}
+          env:
+            SNAPSHOTLAB_BUNDLE_META: ${{ needs.produce_msvc_x64_n256.outputs.bundle_meta }}
+            SNAPSHOTLAB_BUNDLE_COUNT: ${{ needs.produce_msvc_x64_n256.outputs.bundle_count }}
+            SNAPSHOTLAB_BUNDLE_00: ${{ needs.produce_msvc_x64_n256.outputs.bundle_00 }}
+            SNAPSHOTLAB_BUNDLE_01: ${{ needs.produce_msvc_x64_n256.outputs.bundle_01 }}
+            SNAPSHOTLAB_BUNDLE_02: ${{ needs.produce_msvc_x64_n256.outputs.bundle_02 }}
+            SNAPSHOTLAB_BUNDLE_03: ${{ needs.produce_msvc_x64_n256.outputs.bundle_03 }}
+            SNAPSHOTLAB_BUNDLE_04: ${{ needs.produce_msvc_x64_n256.outputs.bundle_04 }}
+            SNAPSHOTLAB_BUNDLE_05: ${{ needs.produce_msvc_x64_n256.outputs.bundle_05 }}
+            SNAPSHOTLAB_BUNDLE_06: ${{ needs.produce_msvc_x64_n256.outputs.bundle_06 }}
+            SNAPSHOTLAB_BUNDLE_07: ${{ needs.produce_msvc_x64_n256.outputs.bundle_07 }}
+            SNAPSHOTLAB_BUNDLE_08: ${{ needs.produce_msvc_x64_n256.outputs.bundle_08 }}
+            SNAPSHOTLAB_BUNDLE_09: ${{ needs.produce_msvc_x64_n256.outputs.bundle_09 }}
+            SNAPSHOTLAB_BUNDLE_10: ${{ needs.produce_msvc_x64_n256.outputs.bundle_10 }}
+            SNAPSHOTLAB_BUNDLE_11: ${{ needs.produce_msvc_x64_n256.outputs.bundle_11 }}
+            SNAPSHOTLAB_BUNDLE_12: ${{ needs.produce_msvc_x64_n256.outputs.bundle_12 }}
+            SNAPSHOTLAB_BUNDLE_13: ${{ needs.produce_msvc_x64_n256.outputs.bundle_13 }}
+            SNAPSHOTLAB_BUNDLE_14: ${{ needs.produce_msvc_x64_n256.outputs.bundle_14 }}
+            SNAPSHOTLAB_BUNDLE_15: ${{ needs.produce_msvc_x64_n256.outputs.bundle_15 }}
+            SNAPSHOTLAB_BUNDLE_16: ${{ needs.produce_msvc_x64_n256.outputs.bundle_16 }}
+            SNAPSHOTLAB_BUNDLE_17: ${{ needs.produce_msvc_x64_n256.outputs.bundle_17 }}
+            SNAPSHOTLAB_BUNDLE_18: ${{ needs.produce_msvc_x64_n256.outputs.bundle_18 }}
+            SNAPSHOTLAB_BUNDLE_19: ${{ needs.produce_msvc_x64_n256.outputs.bundle_19 }}
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "snapshotlab_ci.py", "receive", "--source-profile", "windows-msvc-x64", "--bodies", "256"], check=True)
+        - name: Receive bundle from macos-clang-arm64
+          id: receive_macos_arm64
+          if: ${{ !cancelled() && github.event.repository.visibility == 'public' && (inputs.mode == 'full') && needs.produce_macos_arm64_n256.result == 'success' }}
+          env:
+            SNAPSHOTLAB_BUNDLE_META: ${{ needs.produce_macos_arm64_n256.outputs.bundle_meta }}
+            SNAPSHOTLAB_BUNDLE_COUNT: ${{ needs.produce_macos_arm64_n256.outputs.bundle_count }}
+            SNAPSHOTLAB_BUNDLE_00: ${{ needs.produce_macos_arm64_n256.outputs.bundle_00 }}
+            SNAPSHOTLAB_BUNDLE_01: ${{ needs.produce_macos_arm64_n256.outputs.bundle_01 }}
+            SNAPSHOTLAB_BUNDLE_02: ${{ needs.produce_macos_arm64_n256.outputs.bundle_02 }}
+            SNAPSHOTLAB_BUNDLE_03: ${{ needs.produce_macos_arm64_n256.outputs.bundle_03 }}
+            SNAPSHOTLAB_BUNDLE_04: ${{ needs.produce_macos_arm64_n256.outputs.bundle_04 }}
+            SNAPSHOTLAB_BUNDLE_05: ${{ needs.produce_macos_arm64_n256.outputs.bundle_05 }}
+            SNAPSHOTLAB_BUNDLE_06: ${{ needs.produce_macos_arm64_n256.outputs.bundle_06 }}
+            SNAPSHOTLAB_BUNDLE_07: ${{ needs.produce_macos_arm64_n256.outputs.bundle_07 }}
+            SNAPSHOTLAB_BUNDLE_08: ${{ needs.produce_macos_arm64_n256.outputs.bundle_08 }}
+            SNAPSHOTLAB_BUNDLE_09: ${{ needs.produce_macos_arm64_n256.outputs.bundle_09 }}
+            SNAPSHOTLAB_BUNDLE_10: ${{ needs.produce_macos_arm64_n256.outputs.bundle_10 }}
+            SNAPSHOTLAB_BUNDLE_11: ${{ needs.produce_macos_arm64_n256.outputs.bundle_11 }}
+            SNAPSHOTLAB_BUNDLE_12: ${{ needs.produce_macos_arm64_n256.outputs.bundle_12 }}
+            SNAPSHOTLAB_BUNDLE_13: ${{ needs.produce_macos_arm64_n256.outputs.bundle_13 }}
+            SNAPSHOTLAB_BUNDLE_14: ${{ needs.produce_macos_arm64_n256.outputs.bundle_14 }}
+            SNAPSHOTLAB_BUNDLE_15: ${{ needs.produce_macos_arm64_n256.outputs.bundle_15 }}
+            SNAPSHOTLAB_BUNDLE_16: ${{ needs.produce_macos_arm64_n256.outputs.bundle_16 }}
+            SNAPSHOTLAB_BUNDLE_17: ${{ needs.produce_macos_arm64_n256.outputs.bundle_17 }}
+            SNAPSHOTLAB_BUNDLE_18: ${{ needs.produce_macos_arm64_n256.outputs.bundle_18 }}
+            SNAPSHOTLAB_BUNDLE_19: ${{ needs.produce_macos_arm64_n256.outputs.bundle_19 }}
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "snapshotlab_ci.py", "receive", "--source-profile", "macos-clang-arm64", "--bodies", "256"], check=True)
+        - name: Consume every available source case
+          if: ${{ !cancelled() && github.event.repository.visibility == 'public' && (inputs.mode == 'full' || inputs.mode == 'smoke') }}
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "snapshotlab_ci.py", "consume", "--profile", "linux-gcc-x64", "--compiler", "gcc", "--config", "RelWithDebInfo", "--simd", "4", "--workers", "1", "--bodies", "256", "--mode", "${{ inputs.mode }}", "--parallel", "2", "--timeout", "900"], check=True)
+  consume_clang_arm64_n64:
+    needs: [produce_gcc_x64_n64, produce_clang_arm64_n64, produce_msvc_x64_n64, produce_macos_arm64_n64]
+    if: ${{ always() && !cancelled() && github.event.repository.visibility == 'public' && (inputs.mode == 'full' || (inputs.mode == 'smoke' && (true))) }}
+    name: Consume / linux-clang-arm64 / 64 bodies
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 45
+    steps:
+        - name: Checkout harness sources
+          uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+          with:
+            fetch-depth: 1
+            persist-credentials: false
+        - name: Checkout pinned upstream source
+          uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+          with:
+            repository: erincatto/box3d
+            ref: 5d83df83ab47172c2c745b44315e7538ead02397
+            path: upstream
+            fetch-depth: 1
+            persist-credentials: false
+        - name: Verify pinned public source and runner
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "ci.py", "inventory", "--expected-arch", "arm64"], check=True)
+        - name: Receive bundle from linux-gcc-x64
+          id: receive_gcc_x64
+          if: ${{ !cancelled() && github.event.repository.visibility == 'public' && (true) && needs.produce_gcc_x64_n64.result == 'success' }}
+          env:
+            SNAPSHOTLAB_BUNDLE_META: ${{ needs.produce_gcc_x64_n64.outputs.bundle_meta }}
+            SNAPSHOTLAB_BUNDLE_COUNT: ${{ needs.produce_gcc_x64_n64.outputs.bundle_count }}
+            SNAPSHOTLAB_BUNDLE_00: ${{ needs.produce_gcc_x64_n64.outputs.bundle_00 }}
+            SNAPSHOTLAB_BUNDLE_01: ${{ needs.produce_gcc_x64_n64.outputs.bundle_01 }}
+            SNAPSHOTLAB_BUNDLE_02: ${{ needs.produce_gcc_x64_n64.outputs.bundle_02 }}
+            SNAPSHOTLAB_BUNDLE_03: ${{ needs.produce_gcc_x64_n64.outputs.bundle_03 }}
+            SNAPSHOTLAB_BUNDLE_04: ${{ needs.produce_gcc_x64_n64.outputs.bundle_04 }}
+            SNAPSHOTLAB_BUNDLE_05: ${{ needs.produce_gcc_x64_n64.outputs.bundle_05 }}
+            SNAPSHOTLAB_BUNDLE_06: ${{ needs.produce_gcc_x64_n64.outputs.bundle_06 }}
+            SNAPSHOTLAB_BUNDLE_07: ${{ needs.produce_gcc_x64_n64.outputs.bundle_07 }}
+            SNAPSHOTLAB_BUNDLE_08: ${{ needs.produce_gcc_x64_n64.outputs.bundle_08 }}
+            SNAPSHOTLAB_BUNDLE_09: ${{ needs.produce_gcc_x64_n64.outputs.bundle_09 }}
+            SNAPSHOTLAB_BUNDLE_10: ${{ needs.produce_gcc_x64_n64.outputs.bundle_10 }}
+            SNAPSHOTLAB_BUNDLE_11: ${{ needs.produce_gcc_x64_n64.outputs.bundle_11 }}
+            SNAPSHOTLAB_BUNDLE_12: ${{ needs.produce_gcc_x64_n64.outputs.bundle_12 }}
+            SNAPSHOTLAB_BUNDLE_13: ${{ needs.produce_gcc_x64_n64.outputs.bundle_13 }}
+            SNAPSHOTLAB_BUNDLE_14: ${{ needs.produce_gcc_x64_n64.outputs.bundle_14 }}
+            SNAPSHOTLAB_BUNDLE_15: ${{ needs.produce_gcc_x64_n64.outputs.bundle_15 }}
+            SNAPSHOTLAB_BUNDLE_16: ${{ needs.produce_gcc_x64_n64.outputs.bundle_16 }}
+            SNAPSHOTLAB_BUNDLE_17: ${{ needs.produce_gcc_x64_n64.outputs.bundle_17 }}
+            SNAPSHOTLAB_BUNDLE_18: ${{ needs.produce_gcc_x64_n64.outputs.bundle_18 }}
+            SNAPSHOTLAB_BUNDLE_19: ${{ needs.produce_gcc_x64_n64.outputs.bundle_19 }}
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "snapshotlab_ci.py", "receive", "--source-profile", "linux-gcc-x64", "--bodies", "64"], check=True)
+        - name: Receive bundle from linux-clang-arm64
+          id: receive_clang_arm64
+          if: ${{ !cancelled() && github.event.repository.visibility == 'public' && (true) && needs.produce_clang_arm64_n64.result == 'success' }}
+          env:
+            SNAPSHOTLAB_BUNDLE_META: ${{ needs.produce_clang_arm64_n64.outputs.bundle_meta }}
+            SNAPSHOTLAB_BUNDLE_COUNT: ${{ needs.produce_clang_arm64_n64.outputs.bundle_count }}
+            SNAPSHOTLAB_BUNDLE_00: ${{ needs.produce_clang_arm64_n64.outputs.bundle_00 }}
+            SNAPSHOTLAB_BUNDLE_01: ${{ needs.produce_clang_arm64_n64.outputs.bundle_01 }}
+            SNAPSHOTLAB_BUNDLE_02: ${{ needs.produce_clang_arm64_n64.outputs.bundle_02 }}
+            SNAPSHOTLAB_BUNDLE_03: ${{ needs.produce_clang_arm64_n64.outputs.bundle_03 }}
+            SNAPSHOTLAB_BUNDLE_04: ${{ needs.produce_clang_arm64_n64.outputs.bundle_04 }}
+            SNAPSHOTLAB_BUNDLE_05: ${{ needs.produce_clang_arm64_n64.outputs.bundle_05 }}
+            SNAPSHOTLAB_BUNDLE_06: ${{ needs.produce_clang_arm64_n64.outputs.bundle_06 }}
+            SNAPSHOTLAB_BUNDLE_07: ${{ needs.produce_clang_arm64_n64.outputs.bundle_07 }}
+            SNAPSHOTLAB_BUNDLE_08: ${{ needs.produce_clang_arm64_n64.outputs.bundle_08 }}
+            SNAPSHOTLAB_BUNDLE_09: ${{ needs.produce_clang_arm64_n64.outputs.bundle_09 }}
+            SNAPSHOTLAB_BUNDLE_10: ${{ needs.produce_clang_arm64_n64.outputs.bundle_10 }}
+            SNAPSHOTLAB_BUNDLE_11: ${{ needs.produce_clang_arm64_n64.outputs.bundle_11 }}
+            SNAPSHOTLAB_BUNDLE_12: ${{ needs.produce_clang_arm64_n64.outputs.bundle_12 }}
+            SNAPSHOTLAB_BUNDLE_13: ${{ needs.produce_clang_arm64_n64.outputs.bundle_13 }}
+            SNAPSHOTLAB_BUNDLE_14: ${{ needs.produce_clang_arm64_n64.outputs.bundle_14 }}
+            SNAPSHOTLAB_BUNDLE_15: ${{ needs.produce_clang_arm64_n64.outputs.bundle_15 }}
+            SNAPSHOTLAB_BUNDLE_16: ${{ needs.produce_clang_arm64_n64.outputs.bundle_16 }}
+            SNAPSHOTLAB_BUNDLE_17: ${{ needs.produce_clang_arm64_n64.outputs.bundle_17 }}
+            SNAPSHOTLAB_BUNDLE_18: ${{ needs.produce_clang_arm64_n64.outputs.bundle_18 }}
+            SNAPSHOTLAB_BUNDLE_19: ${{ needs.produce_clang_arm64_n64.outputs.bundle_19 }}
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "snapshotlab_ci.py", "receive", "--source-profile", "linux-clang-arm64", "--bodies", "64"], check=True)
+        - name: Receive bundle from windows-msvc-x64
+          id: receive_msvc_x64
+          if: ${{ !cancelled() && github.event.repository.visibility == 'public' && (inputs.mode == 'full') && needs.produce_msvc_x64_n64.result == 'success' }}
+          env:
+            SNAPSHOTLAB_BUNDLE_META: ${{ needs.produce_msvc_x64_n64.outputs.bundle_meta }}
+            SNAPSHOTLAB_BUNDLE_COUNT: ${{ needs.produce_msvc_x64_n64.outputs.bundle_count }}
+            SNAPSHOTLAB_BUNDLE_00: ${{ needs.produce_msvc_x64_n64.outputs.bundle_00 }}
+            SNAPSHOTLAB_BUNDLE_01: ${{ needs.produce_msvc_x64_n64.outputs.bundle_01 }}
+            SNAPSHOTLAB_BUNDLE_02: ${{ needs.produce_msvc_x64_n64.outputs.bundle_02 }}
+            SNAPSHOTLAB_BUNDLE_03: ${{ needs.produce_msvc_x64_n64.outputs.bundle_03 }}
+            SNAPSHOTLAB_BUNDLE_04: ${{ needs.produce_msvc_x64_n64.outputs.bundle_04 }}
+            SNAPSHOTLAB_BUNDLE_05: ${{ needs.produce_msvc_x64_n64.outputs.bundle_05 }}
+            SNAPSHOTLAB_BUNDLE_06: ${{ needs.produce_msvc_x64_n64.outputs.bundle_06 }}
+            SNAPSHOTLAB_BUNDLE_07: ${{ needs.produce_msvc_x64_n64.outputs.bundle_07 }}
+            SNAPSHOTLAB_BUNDLE_08: ${{ needs.produce_msvc_x64_n64.outputs.bundle_08 }}
+            SNAPSHOTLAB_BUNDLE_09: ${{ needs.produce_msvc_x64_n64.outputs.bundle_09 }}
+            SNAPSHOTLAB_BUNDLE_10: ${{ needs.produce_msvc_x64_n64.outputs.bundle_10 }}
+            SNAPSHOTLAB_BUNDLE_11: ${{ needs.produce_msvc_x64_n64.outputs.bundle_11 }}
+            SNAPSHOTLAB_BUNDLE_12: ${{ needs.produce_msvc_x64_n64.outputs.bundle_12 }}
+            SNAPSHOTLAB_BUNDLE_13: ${{ needs.produce_msvc_x64_n64.outputs.bundle_13 }}
+            SNAPSHOTLAB_BUNDLE_14: ${{ needs.produce_msvc_x64_n64.outputs.bundle_14 }}
+            SNAPSHOTLAB_BUNDLE_15: ${{ needs.produce_msvc_x64_n64.outputs.bundle_15 }}
+            SNAPSHOTLAB_BUNDLE_16: ${{ needs.produce_msvc_x64_n64.outputs.bundle_16 }}
+            SNAPSHOTLAB_BUNDLE_17: ${{ needs.produce_msvc_x64_n64.outputs.bundle_17 }}
+            SNAPSHOTLAB_BUNDLE_18: ${{ needs.produce_msvc_x64_n64.outputs.bundle_18 }}
+            SNAPSHOTLAB_BUNDLE_19: ${{ needs.produce_msvc_x64_n64.outputs.bundle_19 }}
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "snapshotlab_ci.py", "receive", "--source-profile", "windows-msvc-x64", "--bodies", "64"], check=True)
+        - name: Receive bundle from macos-clang-arm64
+          id: receive_macos_arm64
+          if: ${{ !cancelled() && github.event.repository.visibility == 'public' && (inputs.mode == 'full') && needs.produce_macos_arm64_n64.result == 'success' }}
+          env:
+            SNAPSHOTLAB_BUNDLE_META: ${{ needs.produce_macos_arm64_n64.outputs.bundle_meta }}
+            SNAPSHOTLAB_BUNDLE_COUNT: ${{ needs.produce_macos_arm64_n64.outputs.bundle_count }}
+            SNAPSHOTLAB_BUNDLE_00: ${{ needs.produce_macos_arm64_n64.outputs.bundle_00 }}
+            SNAPSHOTLAB_BUNDLE_01: ${{ needs.produce_macos_arm64_n64.outputs.bundle_01 }}
+            SNAPSHOTLAB_BUNDLE_02: ${{ needs.produce_macos_arm64_n64.outputs.bundle_02 }}
+            SNAPSHOTLAB_BUNDLE_03: ${{ needs.produce_macos_arm64_n64.outputs.bundle_03 }}
+            SNAPSHOTLAB_BUNDLE_04: ${{ needs.produce_macos_arm64_n64.outputs.bundle_04 }}
+            SNAPSHOTLAB_BUNDLE_05: ${{ needs.produce_macos_arm64_n64.outputs.bundle_05 }}
+            SNAPSHOTLAB_BUNDLE_06: ${{ needs.produce_macos_arm64_n64.outputs.bundle_06 }}
+            SNAPSHOTLAB_BUNDLE_07: ${{ needs.produce_macos_arm64_n64.outputs.bundle_07 }}
+            SNAPSHOTLAB_BUNDLE_08: ${{ needs.produce_macos_arm64_n64.outputs.bundle_08 }}
+            SNAPSHOTLAB_BUNDLE_09: ${{ needs.produce_macos_arm64_n64.outputs.bundle_09 }}
+            SNAPSHOTLAB_BUNDLE_10: ${{ needs.produce_macos_arm64_n64.outputs.bundle_10 }}
+            SNAPSHOTLAB_BUNDLE_11: ${{ needs.produce_macos_arm64_n64.outputs.bundle_11 }}
+            SNAPSHOTLAB_BUNDLE_12: ${{ needs.produce_macos_arm64_n64.outputs.bundle_12 }}
+            SNAPSHOTLAB_BUNDLE_13: ${{ needs.produce_macos_arm64_n64.outputs.bundle_13 }}
+            SNAPSHOTLAB_BUNDLE_14: ${{ needs.produce_macos_arm64_n64.outputs.bundle_14 }}
+            SNAPSHOTLAB_BUNDLE_15: ${{ needs.produce_macos_arm64_n64.outputs.bundle_15 }}
+            SNAPSHOTLAB_BUNDLE_16: ${{ needs.produce_macos_arm64_n64.outputs.bundle_16 }}
+            SNAPSHOTLAB_BUNDLE_17: ${{ needs.produce_macos_arm64_n64.outputs.bundle_17 }}
+            SNAPSHOTLAB_BUNDLE_18: ${{ needs.produce_macos_arm64_n64.outputs.bundle_18 }}
+            SNAPSHOTLAB_BUNDLE_19: ${{ needs.produce_macos_arm64_n64.outputs.bundle_19 }}
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "snapshotlab_ci.py", "receive", "--source-profile", "macos-clang-arm64", "--bodies", "64"], check=True)
+        - name: Consume every available source case
+          if: ${{ !cancelled() && github.event.repository.visibility == 'public' && (inputs.mode == 'full' || inputs.mode == 'smoke') }}
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "snapshotlab_ci.py", "consume", "--profile", "linux-clang-arm64", "--compiler", "clang", "--config", "RelWithDebInfo", "--simd", "4", "--workers", "1", "--bodies", "64", "--mode", "${{ inputs.mode }}", "--parallel", "2", "--timeout", "900"], check=True)
+  consume_clang_arm64_n256:
+    needs: [produce_gcc_x64_n256, produce_clang_arm64_n256, produce_msvc_x64_n256, produce_macos_arm64_n256]
+    if: ${{ always() && !cancelled() && github.event.repository.visibility == 'public' && (inputs.mode == 'full' || (inputs.mode == 'smoke' && (true))) }}
+    name: Consume / linux-clang-arm64 / 256 bodies
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 45
+    steps:
+        - name: Checkout harness sources
+          uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+          with:
+            fetch-depth: 1
+            persist-credentials: false
+        - name: Checkout pinned upstream source
+          uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+          with:
+            repository: erincatto/box3d
+            ref: 5d83df83ab47172c2c745b44315e7538ead02397
+            path: upstream
+            fetch-depth: 1
+            persist-credentials: false
+        - name: Verify pinned public source and runner
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "ci.py", "inventory", "--expected-arch", "arm64"], check=True)
+        - name: Receive bundle from linux-gcc-x64
+          id: receive_gcc_x64
+          if: ${{ !cancelled() && github.event.repository.visibility == 'public' && (true) && needs.produce_gcc_x64_n256.result == 'success' }}
+          env:
+            SNAPSHOTLAB_BUNDLE_META: ${{ needs.produce_gcc_x64_n256.outputs.bundle_meta }}
+            SNAPSHOTLAB_BUNDLE_COUNT: ${{ needs.produce_gcc_x64_n256.outputs.bundle_count }}
+            SNAPSHOTLAB_BUNDLE_00: ${{ needs.produce_gcc_x64_n256.outputs.bundle_00 }}
+            SNAPSHOTLAB_BUNDLE_01: ${{ needs.produce_gcc_x64_n256.outputs.bundle_01 }}
+            SNAPSHOTLAB_BUNDLE_02: ${{ needs.produce_gcc_x64_n256.outputs.bundle_02 }}
+            SNAPSHOTLAB_BUNDLE_03: ${{ needs.produce_gcc_x64_n256.outputs.bundle_03 }}
+            SNAPSHOTLAB_BUNDLE_04: ${{ needs.produce_gcc_x64_n256.outputs.bundle_04 }}
+            SNAPSHOTLAB_BUNDLE_05: ${{ needs.produce_gcc_x64_n256.outputs.bundle_05 }}
+            SNAPSHOTLAB_BUNDLE_06: ${{ needs.produce_gcc_x64_n256.outputs.bundle_06 }}
+            SNAPSHOTLAB_BUNDLE_07: ${{ needs.produce_gcc_x64_n256.outputs.bundle_07 }}
+            SNAPSHOTLAB_BUNDLE_08: ${{ needs.produce_gcc_x64_n256.outputs.bundle_08 }}
+            SNAPSHOTLAB_BUNDLE_09: ${{ needs.produce_gcc_x64_n256.outputs.bundle_09 }}
+            SNAPSHOTLAB_BUNDLE_10: ${{ needs.produce_gcc_x64_n256.outputs.bundle_10 }}
+            SNAPSHOTLAB_BUNDLE_11: ${{ needs.produce_gcc_x64_n256.outputs.bundle_11 }}
+            SNAPSHOTLAB_BUNDLE_12: ${{ needs.produce_gcc_x64_n256.outputs.bundle_12 }}
+            SNAPSHOTLAB_BUNDLE_13: ${{ needs.produce_gcc_x64_n256.outputs.bundle_13 }}
+            SNAPSHOTLAB_BUNDLE_14: ${{ needs.produce_gcc_x64_n256.outputs.bundle_14 }}
+            SNAPSHOTLAB_BUNDLE_15: ${{ needs.produce_gcc_x64_n256.outputs.bundle_15 }}
+            SNAPSHOTLAB_BUNDLE_16: ${{ needs.produce_gcc_x64_n256.outputs.bundle_16 }}
+            SNAPSHOTLAB_BUNDLE_17: ${{ needs.produce_gcc_x64_n256.outputs.bundle_17 }}
+            SNAPSHOTLAB_BUNDLE_18: ${{ needs.produce_gcc_x64_n256.outputs.bundle_18 }}
+            SNAPSHOTLAB_BUNDLE_19: ${{ needs.produce_gcc_x64_n256.outputs.bundle_19 }}
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "snapshotlab_ci.py", "receive", "--source-profile", "linux-gcc-x64", "--bodies", "256"], check=True)
+        - name: Receive bundle from linux-clang-arm64
+          id: receive_clang_arm64
+          if: ${{ !cancelled() && github.event.repository.visibility == 'public' && (true) && needs.produce_clang_arm64_n256.result == 'success' }}
+          env:
+            SNAPSHOTLAB_BUNDLE_META: ${{ needs.produce_clang_arm64_n256.outputs.bundle_meta }}
+            SNAPSHOTLAB_BUNDLE_COUNT: ${{ needs.produce_clang_arm64_n256.outputs.bundle_count }}
+            SNAPSHOTLAB_BUNDLE_00: ${{ needs.produce_clang_arm64_n256.outputs.bundle_00 }}
+            SNAPSHOTLAB_BUNDLE_01: ${{ needs.produce_clang_arm64_n256.outputs.bundle_01 }}
+            SNAPSHOTLAB_BUNDLE_02: ${{ needs.produce_clang_arm64_n256.outputs.bundle_02 }}
+            SNAPSHOTLAB_BUNDLE_03: ${{ needs.produce_clang_arm64_n256.outputs.bundle_03 }}
+            SNAPSHOTLAB_BUNDLE_04: ${{ needs.produce_clang_arm64_n256.outputs.bundle_04 }}
+            SNAPSHOTLAB_BUNDLE_05: ${{ needs.produce_clang_arm64_n256.outputs.bundle_05 }}
+            SNAPSHOTLAB_BUNDLE_06: ${{ needs.produce_clang_arm64_n256.outputs.bundle_06 }}
+            SNAPSHOTLAB_BUNDLE_07: ${{ needs.produce_clang_arm64_n256.outputs.bundle_07 }}
+            SNAPSHOTLAB_BUNDLE_08: ${{ needs.produce_clang_arm64_n256.outputs.bundle_08 }}
+            SNAPSHOTLAB_BUNDLE_09: ${{ needs.produce_clang_arm64_n256.outputs.bundle_09 }}
+            SNAPSHOTLAB_BUNDLE_10: ${{ needs.produce_clang_arm64_n256.outputs.bundle_10 }}
+            SNAPSHOTLAB_BUNDLE_11: ${{ needs.produce_clang_arm64_n256.outputs.bundle_11 }}
+            SNAPSHOTLAB_BUNDLE_12: ${{ needs.produce_clang_arm64_n256.outputs.bundle_12 }}
+            SNAPSHOTLAB_BUNDLE_13: ${{ needs.produce_clang_arm64_n256.outputs.bundle_13 }}
+            SNAPSHOTLAB_BUNDLE_14: ${{ needs.produce_clang_arm64_n256.outputs.bundle_14 }}
+            SNAPSHOTLAB_BUNDLE_15: ${{ needs.produce_clang_arm64_n256.outputs.bundle_15 }}
+            SNAPSHOTLAB_BUNDLE_16: ${{ needs.produce_clang_arm64_n256.outputs.bundle_16 }}
+            SNAPSHOTLAB_BUNDLE_17: ${{ needs.produce_clang_arm64_n256.outputs.bundle_17 }}
+            SNAPSHOTLAB_BUNDLE_18: ${{ needs.produce_clang_arm64_n256.outputs.bundle_18 }}
+            SNAPSHOTLAB_BUNDLE_19: ${{ needs.produce_clang_arm64_n256.outputs.bundle_19 }}
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "snapshotlab_ci.py", "receive", "--source-profile", "linux-clang-arm64", "--bodies", "256"], check=True)
+        - name: Receive bundle from windows-msvc-x64
+          id: receive_msvc_x64
+          if: ${{ !cancelled() && github.event.repository.visibility == 'public' && (inputs.mode == 'full') && needs.produce_msvc_x64_n256.result == 'success' }}
+          env:
+            SNAPSHOTLAB_BUNDLE_META: ${{ needs.produce_msvc_x64_n256.outputs.bundle_meta }}
+            SNAPSHOTLAB_BUNDLE_COUNT: ${{ needs.produce_msvc_x64_n256.outputs.bundle_count }}
+            SNAPSHOTLAB_BUNDLE_00: ${{ needs.produce_msvc_x64_n256.outputs.bundle_00 }}
+            SNAPSHOTLAB_BUNDLE_01: ${{ needs.produce_msvc_x64_n256.outputs.bundle_01 }}
+            SNAPSHOTLAB_BUNDLE_02: ${{ needs.produce_msvc_x64_n256.outputs.bundle_02 }}
+            SNAPSHOTLAB_BUNDLE_03: ${{ needs.produce_msvc_x64_n256.outputs.bundle_03 }}
+            SNAPSHOTLAB_BUNDLE_04: ${{ needs.produce_msvc_x64_n256.outputs.bundle_04 }}
+            SNAPSHOTLAB_BUNDLE_05: ${{ needs.produce_msvc_x64_n256.outputs.bundle_05 }}
+            SNAPSHOTLAB_BUNDLE_06: ${{ needs.produce_msvc_x64_n256.outputs.bundle_06 }}
+            SNAPSHOTLAB_BUNDLE_07: ${{ needs.produce_msvc_x64_n256.outputs.bundle_07 }}
+            SNAPSHOTLAB_BUNDLE_08: ${{ needs.produce_msvc_x64_n256.outputs.bundle_08 }}
+            SNAPSHOTLAB_BUNDLE_09: ${{ needs.produce_msvc_x64_n256.outputs.bundle_09 }}
+            SNAPSHOTLAB_BUNDLE_10: ${{ needs.produce_msvc_x64_n256.outputs.bundle_10 }}
+            SNAPSHOTLAB_BUNDLE_11: ${{ needs.produce_msvc_x64_n256.outputs.bundle_11 }}
+            SNAPSHOTLAB_BUNDLE_12: ${{ needs.produce_msvc_x64_n256.outputs.bundle_12 }}
+            SNAPSHOTLAB_BUNDLE_13: ${{ needs.produce_msvc_x64_n256.outputs.bundle_13 }}
+            SNAPSHOTLAB_BUNDLE_14: ${{ needs.produce_msvc_x64_n256.outputs.bundle_14 }}
+            SNAPSHOTLAB_BUNDLE_15: ${{ needs.produce_msvc_x64_n256.outputs.bundle_15 }}
+            SNAPSHOTLAB_BUNDLE_16: ${{ needs.produce_msvc_x64_n256.outputs.bundle_16 }}
+            SNAPSHOTLAB_BUNDLE_17: ${{ needs.produce_msvc_x64_n256.outputs.bundle_17 }}
+            SNAPSHOTLAB_BUNDLE_18: ${{ needs.produce_msvc_x64_n256.outputs.bundle_18 }}
+            SNAPSHOTLAB_BUNDLE_19: ${{ needs.produce_msvc_x64_n256.outputs.bundle_19 }}
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "snapshotlab_ci.py", "receive", "--source-profile", "windows-msvc-x64", "--bodies", "256"], check=True)
+        - name: Receive bundle from macos-clang-arm64
+          id: receive_macos_arm64
+          if: ${{ !cancelled() && github.event.repository.visibility == 'public' && (inputs.mode == 'full') && needs.produce_macos_arm64_n256.result == 'success' }}
+          env:
+            SNAPSHOTLAB_BUNDLE_META: ${{ needs.produce_macos_arm64_n256.outputs.bundle_meta }}
+            SNAPSHOTLAB_BUNDLE_COUNT: ${{ needs.produce_macos_arm64_n256.outputs.bundle_count }}
+            SNAPSHOTLAB_BUNDLE_00: ${{ needs.produce_macos_arm64_n256.outputs.bundle_00 }}
+            SNAPSHOTLAB_BUNDLE_01: ${{ needs.produce_macos_arm64_n256.outputs.bundle_01 }}
+            SNAPSHOTLAB_BUNDLE_02: ${{ needs.produce_macos_arm64_n256.outputs.bundle_02 }}
+            SNAPSHOTLAB_BUNDLE_03: ${{ needs.produce_macos_arm64_n256.outputs.bundle_03 }}
+            SNAPSHOTLAB_BUNDLE_04: ${{ needs.produce_macos_arm64_n256.outputs.bundle_04 }}
+            SNAPSHOTLAB_BUNDLE_05: ${{ needs.produce_macos_arm64_n256.outputs.bundle_05 }}
+            SNAPSHOTLAB_BUNDLE_06: ${{ needs.produce_macos_arm64_n256.outputs.bundle_06 }}
+            SNAPSHOTLAB_BUNDLE_07: ${{ needs.produce_macos_arm64_n256.outputs.bundle_07 }}
+            SNAPSHOTLAB_BUNDLE_08: ${{ needs.produce_macos_arm64_n256.outputs.bundle_08 }}
+            SNAPSHOTLAB_BUNDLE_09: ${{ needs.produce_macos_arm64_n256.outputs.bundle_09 }}
+            SNAPSHOTLAB_BUNDLE_10: ${{ needs.produce_macos_arm64_n256.outputs.bundle_10 }}
+            SNAPSHOTLAB_BUNDLE_11: ${{ needs.produce_macos_arm64_n256.outputs.bundle_11 }}
+            SNAPSHOTLAB_BUNDLE_12: ${{ needs.produce_macos_arm64_n256.outputs.bundle_12 }}
+            SNAPSHOTLAB_BUNDLE_13: ${{ needs.produce_macos_arm64_n256.outputs.bundle_13 }}
+            SNAPSHOTLAB_BUNDLE_14: ${{ needs.produce_macos_arm64_n256.outputs.bundle_14 }}
+            SNAPSHOTLAB_BUNDLE_15: ${{ needs.produce_macos_arm64_n256.outputs.bundle_15 }}
+            SNAPSHOTLAB_BUNDLE_16: ${{ needs.produce_macos_arm64_n256.outputs.bundle_16 }}
+            SNAPSHOTLAB_BUNDLE_17: ${{ needs.produce_macos_arm64_n256.outputs.bundle_17 }}
+            SNAPSHOTLAB_BUNDLE_18: ${{ needs.produce_macos_arm64_n256.outputs.bundle_18 }}
+            SNAPSHOTLAB_BUNDLE_19: ${{ needs.produce_macos_arm64_n256.outputs.bundle_19 }}
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "snapshotlab_ci.py", "receive", "--source-profile", "macos-clang-arm64", "--bodies", "256"], check=True)
+        - name: Consume every available source case
+          if: ${{ !cancelled() && github.event.repository.visibility == 'public' && (inputs.mode == 'full' || inputs.mode == 'smoke') }}
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "snapshotlab_ci.py", "consume", "--profile", "linux-clang-arm64", "--compiler", "clang", "--config", "RelWithDebInfo", "--simd", "4", "--workers", "1", "--bodies", "256", "--mode", "${{ inputs.mode }}", "--parallel", "2", "--timeout", "900"], check=True)
+  consume_msvc_x64_n64:
+    needs: [produce_gcc_x64_n64, produce_clang_arm64_n64, produce_msvc_x64_n64, produce_macos_arm64_n64]
+    if: ${{ always() && !cancelled() && github.event.repository.visibility == 'public' && (inputs.mode == 'full' || (inputs.mode == 'smoke' && (false))) }}
+    name: Consume / windows-msvc-x64 / 64 bodies
+    runs-on: windows-2022
+    timeout-minutes: 45
+    steps:
+        - name: Checkout harness sources
+          uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+          with:
+            fetch-depth: 1
+            persist-credentials: false
+        - name: Checkout pinned upstream source
+          uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+          with:
+            repository: erincatto/box3d
+            ref: 5d83df83ab47172c2c745b44315e7538ead02397
+            path: upstream
+            fetch-depth: 1
+            persist-credentials: false
+        - name: Verify pinned public source and runner
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "ci.py", "inventory", "--expected-arch", "x86_64"], check=True)
+        - name: Receive bundle from linux-gcc-x64
+          id: receive_gcc_x64
+          if: ${{ !cancelled() && github.event.repository.visibility == 'public' && (true) && needs.produce_gcc_x64_n64.result == 'success' }}
+          env:
+            SNAPSHOTLAB_BUNDLE_META: ${{ needs.produce_gcc_x64_n64.outputs.bundle_meta }}
+            SNAPSHOTLAB_BUNDLE_COUNT: ${{ needs.produce_gcc_x64_n64.outputs.bundle_count }}
+            SNAPSHOTLAB_BUNDLE_00: ${{ needs.produce_gcc_x64_n64.outputs.bundle_00 }}
+            SNAPSHOTLAB_BUNDLE_01: ${{ needs.produce_gcc_x64_n64.outputs.bundle_01 }}
+            SNAPSHOTLAB_BUNDLE_02: ${{ needs.produce_gcc_x64_n64.outputs.bundle_02 }}
+            SNAPSHOTLAB_BUNDLE_03: ${{ needs.produce_gcc_x64_n64.outputs.bundle_03 }}
+            SNAPSHOTLAB_BUNDLE_04: ${{ needs.produce_gcc_x64_n64.outputs.bundle_04 }}
+            SNAPSHOTLAB_BUNDLE_05: ${{ needs.produce_gcc_x64_n64.outputs.bundle_05 }}
+            SNAPSHOTLAB_BUNDLE_06: ${{ needs.produce_gcc_x64_n64.outputs.bundle_06 }}
+            SNAPSHOTLAB_BUNDLE_07: ${{ needs.produce_gcc_x64_n64.outputs.bundle_07 }}
+            SNAPSHOTLAB_BUNDLE_08: ${{ needs.produce_gcc_x64_n64.outputs.bundle_08 }}
+            SNAPSHOTLAB_BUNDLE_09: ${{ needs.produce_gcc_x64_n64.outputs.bundle_09 }}
+            SNAPSHOTLAB_BUNDLE_10: ${{ needs.produce_gcc_x64_n64.outputs.bundle_10 }}
+            SNAPSHOTLAB_BUNDLE_11: ${{ needs.produce_gcc_x64_n64.outputs.bundle_11 }}
+            SNAPSHOTLAB_BUNDLE_12: ${{ needs.produce_gcc_x64_n64.outputs.bundle_12 }}
+            SNAPSHOTLAB_BUNDLE_13: ${{ needs.produce_gcc_x64_n64.outputs.bundle_13 }}
+            SNAPSHOTLAB_BUNDLE_14: ${{ needs.produce_gcc_x64_n64.outputs.bundle_14 }}
+            SNAPSHOTLAB_BUNDLE_15: ${{ needs.produce_gcc_x64_n64.outputs.bundle_15 }}
+            SNAPSHOTLAB_BUNDLE_16: ${{ needs.produce_gcc_x64_n64.outputs.bundle_16 }}
+            SNAPSHOTLAB_BUNDLE_17: ${{ needs.produce_gcc_x64_n64.outputs.bundle_17 }}
+            SNAPSHOTLAB_BUNDLE_18: ${{ needs.produce_gcc_x64_n64.outputs.bundle_18 }}
+            SNAPSHOTLAB_BUNDLE_19: ${{ needs.produce_gcc_x64_n64.outputs.bundle_19 }}
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "snapshotlab_ci.py", "receive", "--source-profile", "linux-gcc-x64", "--bodies", "64"], check=True)
+        - name: Receive bundle from linux-clang-arm64
+          id: receive_clang_arm64
+          if: ${{ !cancelled() && github.event.repository.visibility == 'public' && (true) && needs.produce_clang_arm64_n64.result == 'success' }}
+          env:
+            SNAPSHOTLAB_BUNDLE_META: ${{ needs.produce_clang_arm64_n64.outputs.bundle_meta }}
+            SNAPSHOTLAB_BUNDLE_COUNT: ${{ needs.produce_clang_arm64_n64.outputs.bundle_count }}
+            SNAPSHOTLAB_BUNDLE_00: ${{ needs.produce_clang_arm64_n64.outputs.bundle_00 }}
+            SNAPSHOTLAB_BUNDLE_01: ${{ needs.produce_clang_arm64_n64.outputs.bundle_01 }}
+            SNAPSHOTLAB_BUNDLE_02: ${{ needs.produce_clang_arm64_n64.outputs.bundle_02 }}
+            SNAPSHOTLAB_BUNDLE_03: ${{ needs.produce_clang_arm64_n64.outputs.bundle_03 }}
+            SNAPSHOTLAB_BUNDLE_04: ${{ needs.produce_clang_arm64_n64.outputs.bundle_04 }}
+            SNAPSHOTLAB_BUNDLE_05: ${{ needs.produce_clang_arm64_n64.outputs.bundle_05 }}
+            SNAPSHOTLAB_BUNDLE_06: ${{ needs.produce_clang_arm64_n64.outputs.bundle_06 }}
+            SNAPSHOTLAB_BUNDLE_07: ${{ needs.produce_clang_arm64_n64.outputs.bundle_07 }}
+            SNAPSHOTLAB_BUNDLE_08: ${{ needs.produce_clang_arm64_n64.outputs.bundle_08 }}
+            SNAPSHOTLAB_BUNDLE_09: ${{ needs.produce_clang_arm64_n64.outputs.bundle_09 }}
+            SNAPSHOTLAB_BUNDLE_10: ${{ needs.produce_clang_arm64_n64.outputs.bundle_10 }}
+            SNAPSHOTLAB_BUNDLE_11: ${{ needs.produce_clang_arm64_n64.outputs.bundle_11 }}
+            SNAPSHOTLAB_BUNDLE_12: ${{ needs.produce_clang_arm64_n64.outputs.bundle_12 }}
+            SNAPSHOTLAB_BUNDLE_13: ${{ needs.produce_clang_arm64_n64.outputs.bundle_13 }}
+            SNAPSHOTLAB_BUNDLE_14: ${{ needs.produce_clang_arm64_n64.outputs.bundle_14 }}
+            SNAPSHOTLAB_BUNDLE_15: ${{ needs.produce_clang_arm64_n64.outputs.bundle_15 }}
+            SNAPSHOTLAB_BUNDLE_16: ${{ needs.produce_clang_arm64_n64.outputs.bundle_16 }}
+            SNAPSHOTLAB_BUNDLE_17: ${{ needs.produce_clang_arm64_n64.outputs.bundle_17 }}
+            SNAPSHOTLAB_BUNDLE_18: ${{ needs.produce_clang_arm64_n64.outputs.bundle_18 }}
+            SNAPSHOTLAB_BUNDLE_19: ${{ needs.produce_clang_arm64_n64.outputs.bundle_19 }}
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "snapshotlab_ci.py", "receive", "--source-profile", "linux-clang-arm64", "--bodies", "64"], check=True)
+        - name: Receive bundle from windows-msvc-x64
+          id: receive_msvc_x64
+          if: ${{ !cancelled() && github.event.repository.visibility == 'public' && (inputs.mode == 'full') && needs.produce_msvc_x64_n64.result == 'success' }}
+          env:
+            SNAPSHOTLAB_BUNDLE_META: ${{ needs.produce_msvc_x64_n64.outputs.bundle_meta }}
+            SNAPSHOTLAB_BUNDLE_COUNT: ${{ needs.produce_msvc_x64_n64.outputs.bundle_count }}
+            SNAPSHOTLAB_BUNDLE_00: ${{ needs.produce_msvc_x64_n64.outputs.bundle_00 }}
+            SNAPSHOTLAB_BUNDLE_01: ${{ needs.produce_msvc_x64_n64.outputs.bundle_01 }}
+            SNAPSHOTLAB_BUNDLE_02: ${{ needs.produce_msvc_x64_n64.outputs.bundle_02 }}
+            SNAPSHOTLAB_BUNDLE_03: ${{ needs.produce_msvc_x64_n64.outputs.bundle_03 }}
+            SNAPSHOTLAB_BUNDLE_04: ${{ needs.produce_msvc_x64_n64.outputs.bundle_04 }}
+            SNAPSHOTLAB_BUNDLE_05: ${{ needs.produce_msvc_x64_n64.outputs.bundle_05 }}
+            SNAPSHOTLAB_BUNDLE_06: ${{ needs.produce_msvc_x64_n64.outputs.bundle_06 }}
+            SNAPSHOTLAB_BUNDLE_07: ${{ needs.produce_msvc_x64_n64.outputs.bundle_07 }}
+            SNAPSHOTLAB_BUNDLE_08: ${{ needs.produce_msvc_x64_n64.outputs.bundle_08 }}
+            SNAPSHOTLAB_BUNDLE_09: ${{ needs.produce_msvc_x64_n64.outputs.bundle_09 }}
+            SNAPSHOTLAB_BUNDLE_10: ${{ needs.produce_msvc_x64_n64.outputs.bundle_10 }}
+            SNAPSHOTLAB_BUNDLE_11: ${{ needs.produce_msvc_x64_n64.outputs.bundle_11 }}
+            SNAPSHOTLAB_BUNDLE_12: ${{ needs.produce_msvc_x64_n64.outputs.bundle_12 }}
+            SNAPSHOTLAB_BUNDLE_13: ${{ needs.produce_msvc_x64_n64.outputs.bundle_13 }}
+            SNAPSHOTLAB_BUNDLE_14: ${{ needs.produce_msvc_x64_n64.outputs.bundle_14 }}
+            SNAPSHOTLAB_BUNDLE_15: ${{ needs.produce_msvc_x64_n64.outputs.bundle_15 }}
+            SNAPSHOTLAB_BUNDLE_16: ${{ needs.produce_msvc_x64_n64.outputs.bundle_16 }}
+            SNAPSHOTLAB_BUNDLE_17: ${{ needs.produce_msvc_x64_n64.outputs.bundle_17 }}
+            SNAPSHOTLAB_BUNDLE_18: ${{ needs.produce_msvc_x64_n64.outputs.bundle_18 }}
+            SNAPSHOTLAB_BUNDLE_19: ${{ needs.produce_msvc_x64_n64.outputs.bundle_19 }}
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "snapshotlab_ci.py", "receive", "--source-profile", "windows-msvc-x64", "--bodies", "64"], check=True)
+        - name: Receive bundle from macos-clang-arm64
+          id: receive_macos_arm64
+          if: ${{ !cancelled() && github.event.repository.visibility == 'public' && (inputs.mode == 'full') && needs.produce_macos_arm64_n64.result == 'success' }}
+          env:
+            SNAPSHOTLAB_BUNDLE_META: ${{ needs.produce_macos_arm64_n64.outputs.bundle_meta }}
+            SNAPSHOTLAB_BUNDLE_COUNT: ${{ needs.produce_macos_arm64_n64.outputs.bundle_count }}
+            SNAPSHOTLAB_BUNDLE_00: ${{ needs.produce_macos_arm64_n64.outputs.bundle_00 }}
+            SNAPSHOTLAB_BUNDLE_01: ${{ needs.produce_macos_arm64_n64.outputs.bundle_01 }}
+            SNAPSHOTLAB_BUNDLE_02: ${{ needs.produce_macos_arm64_n64.outputs.bundle_02 }}
+            SNAPSHOTLAB_BUNDLE_03: ${{ needs.produce_macos_arm64_n64.outputs.bundle_03 }}
+            SNAPSHOTLAB_BUNDLE_04: ${{ needs.produce_macos_arm64_n64.outputs.bundle_04 }}
+            SNAPSHOTLAB_BUNDLE_05: ${{ needs.produce_macos_arm64_n64.outputs.bundle_05 }}
+            SNAPSHOTLAB_BUNDLE_06: ${{ needs.produce_macos_arm64_n64.outputs.bundle_06 }}
+            SNAPSHOTLAB_BUNDLE_07: ${{ needs.produce_macos_arm64_n64.outputs.bundle_07 }}
+            SNAPSHOTLAB_BUNDLE_08: ${{ needs.produce_macos_arm64_n64.outputs.bundle_08 }}
+            SNAPSHOTLAB_BUNDLE_09: ${{ needs.produce_macos_arm64_n64.outputs.bundle_09 }}
+            SNAPSHOTLAB_BUNDLE_10: ${{ needs.produce_macos_arm64_n64.outputs.bundle_10 }}
+            SNAPSHOTLAB_BUNDLE_11: ${{ needs.produce_macos_arm64_n64.outputs.bundle_11 }}
+            SNAPSHOTLAB_BUNDLE_12: ${{ needs.produce_macos_arm64_n64.outputs.bundle_12 }}
+            SNAPSHOTLAB_BUNDLE_13: ${{ needs.produce_macos_arm64_n64.outputs.bundle_13 }}
+            SNAPSHOTLAB_BUNDLE_14: ${{ needs.produce_macos_arm64_n64.outputs.bundle_14 }}
+            SNAPSHOTLAB_BUNDLE_15: ${{ needs.produce_macos_arm64_n64.outputs.bundle_15 }}
+            SNAPSHOTLAB_BUNDLE_16: ${{ needs.produce_macos_arm64_n64.outputs.bundle_16 }}
+            SNAPSHOTLAB_BUNDLE_17: ${{ needs.produce_macos_arm64_n64.outputs.bundle_17 }}
+            SNAPSHOTLAB_BUNDLE_18: ${{ needs.produce_macos_arm64_n64.outputs.bundle_18 }}
+            SNAPSHOTLAB_BUNDLE_19: ${{ needs.produce_macos_arm64_n64.outputs.bundle_19 }}
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "snapshotlab_ci.py", "receive", "--source-profile", "macos-clang-arm64", "--bodies", "64"], check=True)
+        - name: Consume every available source case
+          if: ${{ !cancelled() && github.event.repository.visibility == 'public' && (inputs.mode == 'full' || inputs.mode == 'smoke') }}
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "snapshotlab_ci.py", "consume", "--profile", "windows-msvc-x64", "--compiler", "msvc", "--config", "RelWithDebInfo", "--simd", "4", "--workers", "1", "--bodies", "64", "--mode", "${{ inputs.mode }}", "--parallel", "2", "--timeout", "900"], check=True)
+  consume_msvc_x64_n256:
+    needs: [produce_gcc_x64_n256, produce_clang_arm64_n256, produce_msvc_x64_n256, produce_macos_arm64_n256]
+    if: ${{ always() && !cancelled() && github.event.repository.visibility == 'public' && (inputs.mode == 'full' || (inputs.mode == 'smoke' && (false))) }}
+    name: Consume / windows-msvc-x64 / 256 bodies
+    runs-on: windows-2022
+    timeout-minutes: 45
+    steps:
+        - name: Checkout harness sources
+          uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+          with:
+            fetch-depth: 1
+            persist-credentials: false
+        - name: Checkout pinned upstream source
+          uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+          with:
+            repository: erincatto/box3d
+            ref: 5d83df83ab47172c2c745b44315e7538ead02397
+            path: upstream
+            fetch-depth: 1
+            persist-credentials: false
+        - name: Verify pinned public source and runner
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "ci.py", "inventory", "--expected-arch", "x86_64"], check=True)
+        - name: Receive bundle from linux-gcc-x64
+          id: receive_gcc_x64
+          if: ${{ !cancelled() && github.event.repository.visibility == 'public' && (true) && needs.produce_gcc_x64_n256.result == 'success' }}
+          env:
+            SNAPSHOTLAB_BUNDLE_META: ${{ needs.produce_gcc_x64_n256.outputs.bundle_meta }}
+            SNAPSHOTLAB_BUNDLE_COUNT: ${{ needs.produce_gcc_x64_n256.outputs.bundle_count }}
+            SNAPSHOTLAB_BUNDLE_00: ${{ needs.produce_gcc_x64_n256.outputs.bundle_00 }}
+            SNAPSHOTLAB_BUNDLE_01: ${{ needs.produce_gcc_x64_n256.outputs.bundle_01 }}
+            SNAPSHOTLAB_BUNDLE_02: ${{ needs.produce_gcc_x64_n256.outputs.bundle_02 }}
+            SNAPSHOTLAB_BUNDLE_03: ${{ needs.produce_gcc_x64_n256.outputs.bundle_03 }}
+            SNAPSHOTLAB_BUNDLE_04: ${{ needs.produce_gcc_x64_n256.outputs.bundle_04 }}
+            SNAPSHOTLAB_BUNDLE_05: ${{ needs.produce_gcc_x64_n256.outputs.bundle_05 }}
+            SNAPSHOTLAB_BUNDLE_06: ${{ needs.produce_gcc_x64_n256.outputs.bundle_06 }}
+            SNAPSHOTLAB_BUNDLE_07: ${{ needs.produce_gcc_x64_n256.outputs.bundle_07 }}
+            SNAPSHOTLAB_BUNDLE_08: ${{ needs.produce_gcc_x64_n256.outputs.bundle_08 }}
+            SNAPSHOTLAB_BUNDLE_09: ${{ needs.produce_gcc_x64_n256.outputs.bundle_09 }}
+            SNAPSHOTLAB_BUNDLE_10: ${{ needs.produce_gcc_x64_n256.outputs.bundle_10 }}
+            SNAPSHOTLAB_BUNDLE_11: ${{ needs.produce_gcc_x64_n256.outputs.bundle_11 }}
+            SNAPSHOTLAB_BUNDLE_12: ${{ needs.produce_gcc_x64_n256.outputs.bundle_12 }}
+            SNAPSHOTLAB_BUNDLE_13: ${{ needs.produce_gcc_x64_n256.outputs.bundle_13 }}
+            SNAPSHOTLAB_BUNDLE_14: ${{ needs.produce_gcc_x64_n256.outputs.bundle_14 }}
+            SNAPSHOTLAB_BUNDLE_15: ${{ needs.produce_gcc_x64_n256.outputs.bundle_15 }}
+            SNAPSHOTLAB_BUNDLE_16: ${{ needs.produce_gcc_x64_n256.outputs.bundle_16 }}
+            SNAPSHOTLAB_BUNDLE_17: ${{ needs.produce_gcc_x64_n256.outputs.bundle_17 }}
+            SNAPSHOTLAB_BUNDLE_18: ${{ needs.produce_gcc_x64_n256.outputs.bundle_18 }}
+            SNAPSHOTLAB_BUNDLE_19: ${{ needs.produce_gcc_x64_n256.outputs.bundle_19 }}
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "snapshotlab_ci.py", "receive", "--source-profile", "linux-gcc-x64", "--bodies", "256"], check=True)
+        - name: Receive bundle from linux-clang-arm64
+          id: receive_clang_arm64
+          if: ${{ !cancelled() && github.event.repository.visibility == 'public' && (true) && needs.produce_clang_arm64_n256.result == 'success' }}
+          env:
+            SNAPSHOTLAB_BUNDLE_META: ${{ needs.produce_clang_arm64_n256.outputs.bundle_meta }}
+            SNAPSHOTLAB_BUNDLE_COUNT: ${{ needs.produce_clang_arm64_n256.outputs.bundle_count }}
+            SNAPSHOTLAB_BUNDLE_00: ${{ needs.produce_clang_arm64_n256.outputs.bundle_00 }}
+            SNAPSHOTLAB_BUNDLE_01: ${{ needs.produce_clang_arm64_n256.outputs.bundle_01 }}
+            SNAPSHOTLAB_BUNDLE_02: ${{ needs.produce_clang_arm64_n256.outputs.bundle_02 }}
+            SNAPSHOTLAB_BUNDLE_03: ${{ needs.produce_clang_arm64_n256.outputs.bundle_03 }}
+            SNAPSHOTLAB_BUNDLE_04: ${{ needs.produce_clang_arm64_n256.outputs.bundle_04 }}
+            SNAPSHOTLAB_BUNDLE_05: ${{ needs.produce_clang_arm64_n256.outputs.bundle_05 }}
+            SNAPSHOTLAB_BUNDLE_06: ${{ needs.produce_clang_arm64_n256.outputs.bundle_06 }}
+            SNAPSHOTLAB_BUNDLE_07: ${{ needs.produce_clang_arm64_n256.outputs.bundle_07 }}
+            SNAPSHOTLAB_BUNDLE_08: ${{ needs.produce_clang_arm64_n256.outputs.bundle_08 }}
+            SNAPSHOTLAB_BUNDLE_09: ${{ needs.produce_clang_arm64_n256.outputs.bundle_09 }}
+            SNAPSHOTLAB_BUNDLE_10: ${{ needs.produce_clang_arm64_n256.outputs.bundle_10 }}
+            SNAPSHOTLAB_BUNDLE_11: ${{ needs.produce_clang_arm64_n256.outputs.bundle_11 }}
+            SNAPSHOTLAB_BUNDLE_12: ${{ needs.produce_clang_arm64_n256.outputs.bundle_12 }}
+            SNAPSHOTLAB_BUNDLE_13: ${{ needs.produce_clang_arm64_n256.outputs.bundle_13 }}
+            SNAPSHOTLAB_BUNDLE_14: ${{ needs.produce_clang_arm64_n256.outputs.bundle_14 }}
+            SNAPSHOTLAB_BUNDLE_15: ${{ needs.produce_clang_arm64_n256.outputs.bundle_15 }}
+            SNAPSHOTLAB_BUNDLE_16: ${{ needs.produce_clang_arm64_n256.outputs.bundle_16 }}
+            SNAPSHOTLAB_BUNDLE_17: ${{ needs.produce_clang_arm64_n256.outputs.bundle_17 }}
+            SNAPSHOTLAB_BUNDLE_18: ${{ needs.produce_clang_arm64_n256.outputs.bundle_18 }}
+            SNAPSHOTLAB_BUNDLE_19: ${{ needs.produce_clang_arm64_n256.outputs.bundle_19 }}
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "snapshotlab_ci.py", "receive", "--source-profile", "linux-clang-arm64", "--bodies", "256"], check=True)
+        - name: Receive bundle from windows-msvc-x64
+          id: receive_msvc_x64
+          if: ${{ !cancelled() && github.event.repository.visibility == 'public' && (inputs.mode == 'full') && needs.produce_msvc_x64_n256.result == 'success' }}
+          env:
+            SNAPSHOTLAB_BUNDLE_META: ${{ needs.produce_msvc_x64_n256.outputs.bundle_meta }}
+            SNAPSHOTLAB_BUNDLE_COUNT: ${{ needs.produce_msvc_x64_n256.outputs.bundle_count }}
+            SNAPSHOTLAB_BUNDLE_00: ${{ needs.produce_msvc_x64_n256.outputs.bundle_00 }}
+            SNAPSHOTLAB_BUNDLE_01: ${{ needs.produce_msvc_x64_n256.outputs.bundle_01 }}
+            SNAPSHOTLAB_BUNDLE_02: ${{ needs.produce_msvc_x64_n256.outputs.bundle_02 }}
+            SNAPSHOTLAB_BUNDLE_03: ${{ needs.produce_msvc_x64_n256.outputs.bundle_03 }}
+            SNAPSHOTLAB_BUNDLE_04: ${{ needs.produce_msvc_x64_n256.outputs.bundle_04 }}
+            SNAPSHOTLAB_BUNDLE_05: ${{ needs.produce_msvc_x64_n256.outputs.bundle_05 }}
+            SNAPSHOTLAB_BUNDLE_06: ${{ needs.produce_msvc_x64_n256.outputs.bundle_06 }}
+            SNAPSHOTLAB_BUNDLE_07: ${{ needs.produce_msvc_x64_n256.outputs.bundle_07 }}
+            SNAPSHOTLAB_BUNDLE_08: ${{ needs.produce_msvc_x64_n256.outputs.bundle_08 }}
+            SNAPSHOTLAB_BUNDLE_09: ${{ needs.produce_msvc_x64_n256.outputs.bundle_09 }}
+            SNAPSHOTLAB_BUNDLE_10: ${{ needs.produce_msvc_x64_n256.outputs.bundle_10 }}
+            SNAPSHOTLAB_BUNDLE_11: ${{ needs.produce_msvc_x64_n256.outputs.bundle_11 }}
+            SNAPSHOTLAB_BUNDLE_12: ${{ needs.produce_msvc_x64_n256.outputs.bundle_12 }}
+            SNAPSHOTLAB_BUNDLE_13: ${{ needs.produce_msvc_x64_n256.outputs.bundle_13 }}
+            SNAPSHOTLAB_BUNDLE_14: ${{ needs.produce_msvc_x64_n256.outputs.bundle_14 }}
+            SNAPSHOTLAB_BUNDLE_15: ${{ needs.produce_msvc_x64_n256.outputs.bundle_15 }}
+            SNAPSHOTLAB_BUNDLE_16: ${{ needs.produce_msvc_x64_n256.outputs.bundle_16 }}
+            SNAPSHOTLAB_BUNDLE_17: ${{ needs.produce_msvc_x64_n256.outputs.bundle_17 }}
+            SNAPSHOTLAB_BUNDLE_18: ${{ needs.produce_msvc_x64_n256.outputs.bundle_18 }}
+            SNAPSHOTLAB_BUNDLE_19: ${{ needs.produce_msvc_x64_n256.outputs.bundle_19 }}
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "snapshotlab_ci.py", "receive", "--source-profile", "windows-msvc-x64", "--bodies", "256"], check=True)
+        - name: Receive bundle from macos-clang-arm64
+          id: receive_macos_arm64
+          if: ${{ !cancelled() && github.event.repository.visibility == 'public' && (inputs.mode == 'full') && needs.produce_macos_arm64_n256.result == 'success' }}
+          env:
+            SNAPSHOTLAB_BUNDLE_META: ${{ needs.produce_macos_arm64_n256.outputs.bundle_meta }}
+            SNAPSHOTLAB_BUNDLE_COUNT: ${{ needs.produce_macos_arm64_n256.outputs.bundle_count }}
+            SNAPSHOTLAB_BUNDLE_00: ${{ needs.produce_macos_arm64_n256.outputs.bundle_00 }}
+            SNAPSHOTLAB_BUNDLE_01: ${{ needs.produce_macos_arm64_n256.outputs.bundle_01 }}
+            SNAPSHOTLAB_BUNDLE_02: ${{ needs.produce_macos_arm64_n256.outputs.bundle_02 }}
+            SNAPSHOTLAB_BUNDLE_03: ${{ needs.produce_macos_arm64_n256.outputs.bundle_03 }}
+            SNAPSHOTLAB_BUNDLE_04: ${{ needs.produce_macos_arm64_n256.outputs.bundle_04 }}
+            SNAPSHOTLAB_BUNDLE_05: ${{ needs.produce_macos_arm64_n256.outputs.bundle_05 }}
+            SNAPSHOTLAB_BUNDLE_06: ${{ needs.produce_macos_arm64_n256.outputs.bundle_06 }}
+            SNAPSHOTLAB_BUNDLE_07: ${{ needs.produce_macos_arm64_n256.outputs.bundle_07 }}
+            SNAPSHOTLAB_BUNDLE_08: ${{ needs.produce_macos_arm64_n256.outputs.bundle_08 }}
+            SNAPSHOTLAB_BUNDLE_09: ${{ needs.produce_macos_arm64_n256.outputs.bundle_09 }}
+            SNAPSHOTLAB_BUNDLE_10: ${{ needs.produce_macos_arm64_n256.outputs.bundle_10 }}
+            SNAPSHOTLAB_BUNDLE_11: ${{ needs.produce_macos_arm64_n256.outputs.bundle_11 }}
+            SNAPSHOTLAB_BUNDLE_12: ${{ needs.produce_macos_arm64_n256.outputs.bundle_12 }}
+            SNAPSHOTLAB_BUNDLE_13: ${{ needs.produce_macos_arm64_n256.outputs.bundle_13 }}
+            SNAPSHOTLAB_BUNDLE_14: ${{ needs.produce_macos_arm64_n256.outputs.bundle_14 }}
+            SNAPSHOTLAB_BUNDLE_15: ${{ needs.produce_macos_arm64_n256.outputs.bundle_15 }}
+            SNAPSHOTLAB_BUNDLE_16: ${{ needs.produce_macos_arm64_n256.outputs.bundle_16 }}
+            SNAPSHOTLAB_BUNDLE_17: ${{ needs.produce_macos_arm64_n256.outputs.bundle_17 }}
+            SNAPSHOTLAB_BUNDLE_18: ${{ needs.produce_macos_arm64_n256.outputs.bundle_18 }}
+            SNAPSHOTLAB_BUNDLE_19: ${{ needs.produce_macos_arm64_n256.outputs.bundle_19 }}
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "snapshotlab_ci.py", "receive", "--source-profile", "macos-clang-arm64", "--bodies", "256"], check=True)
+        - name: Consume every available source case
+          if: ${{ !cancelled() && github.event.repository.visibility == 'public' && (inputs.mode == 'full' || inputs.mode == 'smoke') }}
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "snapshotlab_ci.py", "consume", "--profile", "windows-msvc-x64", "--compiler", "msvc", "--config", "RelWithDebInfo", "--simd", "4", "--workers", "1", "--bodies", "256", "--mode", "${{ inputs.mode }}", "--parallel", "2", "--timeout", "900"], check=True)
+  consume_macos_arm64_n64:
+    needs: [produce_gcc_x64_n64, produce_clang_arm64_n64, produce_msvc_x64_n64, produce_macos_arm64_n64]
+    if: ${{ always() && !cancelled() && github.event.repository.visibility == 'public' && (inputs.mode == 'full' || (inputs.mode == 'smoke' && (false))) }}
+    name: Consume / macos-clang-arm64 / 64 bodies
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+        - name: Checkout harness sources
+          uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+          with:
+            fetch-depth: 1
+            persist-credentials: false
+        - name: Checkout pinned upstream source
+          uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+          with:
+            repository: erincatto/box3d
+            ref: 5d83df83ab47172c2c745b44315e7538ead02397
+            path: upstream
+            fetch-depth: 1
+            persist-credentials: false
+        - name: Verify pinned public source and runner
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "ci.py", "inventory", "--expected-arch", "arm64"], check=True)
+        - name: Receive bundle from linux-gcc-x64
+          id: receive_gcc_x64
+          if: ${{ !cancelled() && github.event.repository.visibility == 'public' && (true) && needs.produce_gcc_x64_n64.result == 'success' }}
+          env:
+            SNAPSHOTLAB_BUNDLE_META: ${{ needs.produce_gcc_x64_n64.outputs.bundle_meta }}
+            SNAPSHOTLAB_BUNDLE_COUNT: ${{ needs.produce_gcc_x64_n64.outputs.bundle_count }}
+            SNAPSHOTLAB_BUNDLE_00: ${{ needs.produce_gcc_x64_n64.outputs.bundle_00 }}
+            SNAPSHOTLAB_BUNDLE_01: ${{ needs.produce_gcc_x64_n64.outputs.bundle_01 }}
+            SNAPSHOTLAB_BUNDLE_02: ${{ needs.produce_gcc_x64_n64.outputs.bundle_02 }}
+            SNAPSHOTLAB_BUNDLE_03: ${{ needs.produce_gcc_x64_n64.outputs.bundle_03 }}
+            SNAPSHOTLAB_BUNDLE_04: ${{ needs.produce_gcc_x64_n64.outputs.bundle_04 }}
+            SNAPSHOTLAB_BUNDLE_05: ${{ needs.produce_gcc_x64_n64.outputs.bundle_05 }}
+            SNAPSHOTLAB_BUNDLE_06: ${{ needs.produce_gcc_x64_n64.outputs.bundle_06 }}
+            SNAPSHOTLAB_BUNDLE_07: ${{ needs.produce_gcc_x64_n64.outputs.bundle_07 }}
+            SNAPSHOTLAB_BUNDLE_08: ${{ needs.produce_gcc_x64_n64.outputs.bundle_08 }}
+            SNAPSHOTLAB_BUNDLE_09: ${{ needs.produce_gcc_x64_n64.outputs.bundle_09 }}
+            SNAPSHOTLAB_BUNDLE_10: ${{ needs.produce_gcc_x64_n64.outputs.bundle_10 }}
+            SNAPSHOTLAB_BUNDLE_11: ${{ needs.produce_gcc_x64_n64.outputs.bundle_11 }}
+            SNAPSHOTLAB_BUNDLE_12: ${{ needs.produce_gcc_x64_n64.outputs.bundle_12 }}
+            SNAPSHOTLAB_BUNDLE_13: ${{ needs.produce_gcc_x64_n64.outputs.bundle_13 }}
+            SNAPSHOTLAB_BUNDLE_14: ${{ needs.produce_gcc_x64_n64.outputs.bundle_14 }}
+            SNAPSHOTLAB_BUNDLE_15: ${{ needs.produce_gcc_x64_n64.outputs.bundle_15 }}
+            SNAPSHOTLAB_BUNDLE_16: ${{ needs.produce_gcc_x64_n64.outputs.bundle_16 }}
+            SNAPSHOTLAB_BUNDLE_17: ${{ needs.produce_gcc_x64_n64.outputs.bundle_17 }}
+            SNAPSHOTLAB_BUNDLE_18: ${{ needs.produce_gcc_x64_n64.outputs.bundle_18 }}
+            SNAPSHOTLAB_BUNDLE_19: ${{ needs.produce_gcc_x64_n64.outputs.bundle_19 }}
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "snapshotlab_ci.py", "receive", "--source-profile", "linux-gcc-x64", "--bodies", "64"], check=True)
+        - name: Receive bundle from linux-clang-arm64
+          id: receive_clang_arm64
+          if: ${{ !cancelled() && github.event.repository.visibility == 'public' && (true) && needs.produce_clang_arm64_n64.result == 'success' }}
+          env:
+            SNAPSHOTLAB_BUNDLE_META: ${{ needs.produce_clang_arm64_n64.outputs.bundle_meta }}
+            SNAPSHOTLAB_BUNDLE_COUNT: ${{ needs.produce_clang_arm64_n64.outputs.bundle_count }}
+            SNAPSHOTLAB_BUNDLE_00: ${{ needs.produce_clang_arm64_n64.outputs.bundle_00 }}
+            SNAPSHOTLAB_BUNDLE_01: ${{ needs.produce_clang_arm64_n64.outputs.bundle_01 }}
+            SNAPSHOTLAB_BUNDLE_02: ${{ needs.produce_clang_arm64_n64.outputs.bundle_02 }}
+            SNAPSHOTLAB_BUNDLE_03: ${{ needs.produce_clang_arm64_n64.outputs.bundle_03 }}
+            SNAPSHOTLAB_BUNDLE_04: ${{ needs.produce_clang_arm64_n64.outputs.bundle_04 }}
+            SNAPSHOTLAB_BUNDLE_05: ${{ needs.produce_clang_arm64_n64.outputs.bundle_05 }}
+            SNAPSHOTLAB_BUNDLE_06: ${{ needs.produce_clang_arm64_n64.outputs.bundle_06 }}
+            SNAPSHOTLAB_BUNDLE_07: ${{ needs.produce_clang_arm64_n64.outputs.bundle_07 }}
+            SNAPSHOTLAB_BUNDLE_08: ${{ needs.produce_clang_arm64_n64.outputs.bundle_08 }}
+            SNAPSHOTLAB_BUNDLE_09: ${{ needs.produce_clang_arm64_n64.outputs.bundle_09 }}
+            SNAPSHOTLAB_BUNDLE_10: ${{ needs.produce_clang_arm64_n64.outputs.bundle_10 }}
+            SNAPSHOTLAB_BUNDLE_11: ${{ needs.produce_clang_arm64_n64.outputs.bundle_11 }}
+            SNAPSHOTLAB_BUNDLE_12: ${{ needs.produce_clang_arm64_n64.outputs.bundle_12 }}
+            SNAPSHOTLAB_BUNDLE_13: ${{ needs.produce_clang_arm64_n64.outputs.bundle_13 }}
+            SNAPSHOTLAB_BUNDLE_14: ${{ needs.produce_clang_arm64_n64.outputs.bundle_14 }}
+            SNAPSHOTLAB_BUNDLE_15: ${{ needs.produce_clang_arm64_n64.outputs.bundle_15 }}
+            SNAPSHOTLAB_BUNDLE_16: ${{ needs.produce_clang_arm64_n64.outputs.bundle_16 }}
+            SNAPSHOTLAB_BUNDLE_17: ${{ needs.produce_clang_arm64_n64.outputs.bundle_17 }}
+            SNAPSHOTLAB_BUNDLE_18: ${{ needs.produce_clang_arm64_n64.outputs.bundle_18 }}
+            SNAPSHOTLAB_BUNDLE_19: ${{ needs.produce_clang_arm64_n64.outputs.bundle_19 }}
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "snapshotlab_ci.py", "receive", "--source-profile", "linux-clang-arm64", "--bodies", "64"], check=True)
+        - name: Receive bundle from windows-msvc-x64
+          id: receive_msvc_x64
+          if: ${{ !cancelled() && github.event.repository.visibility == 'public' && (inputs.mode == 'full') && needs.produce_msvc_x64_n64.result == 'success' }}
+          env:
+            SNAPSHOTLAB_BUNDLE_META: ${{ needs.produce_msvc_x64_n64.outputs.bundle_meta }}
+            SNAPSHOTLAB_BUNDLE_COUNT: ${{ needs.produce_msvc_x64_n64.outputs.bundle_count }}
+            SNAPSHOTLAB_BUNDLE_00: ${{ needs.produce_msvc_x64_n64.outputs.bundle_00 }}
+            SNAPSHOTLAB_BUNDLE_01: ${{ needs.produce_msvc_x64_n64.outputs.bundle_01 }}
+            SNAPSHOTLAB_BUNDLE_02: ${{ needs.produce_msvc_x64_n64.outputs.bundle_02 }}
+            SNAPSHOTLAB_BUNDLE_03: ${{ needs.produce_msvc_x64_n64.outputs.bundle_03 }}
+            SNAPSHOTLAB_BUNDLE_04: ${{ needs.produce_msvc_x64_n64.outputs.bundle_04 }}
+            SNAPSHOTLAB_BUNDLE_05: ${{ needs.produce_msvc_x64_n64.outputs.bundle_05 }}
+            SNAPSHOTLAB_BUNDLE_06: ${{ needs.produce_msvc_x64_n64.outputs.bundle_06 }}
+            SNAPSHOTLAB_BUNDLE_07: ${{ needs.produce_msvc_x64_n64.outputs.bundle_07 }}
+            SNAPSHOTLAB_BUNDLE_08: ${{ needs.produce_msvc_x64_n64.outputs.bundle_08 }}
+            SNAPSHOTLAB_BUNDLE_09: ${{ needs.produce_msvc_x64_n64.outputs.bundle_09 }}
+            SNAPSHOTLAB_BUNDLE_10: ${{ needs.produce_msvc_x64_n64.outputs.bundle_10 }}
+            SNAPSHOTLAB_BUNDLE_11: ${{ needs.produce_msvc_x64_n64.outputs.bundle_11 }}
+            SNAPSHOTLAB_BUNDLE_12: ${{ needs.produce_msvc_x64_n64.outputs.bundle_12 }}
+            SNAPSHOTLAB_BUNDLE_13: ${{ needs.produce_msvc_x64_n64.outputs.bundle_13 }}
+            SNAPSHOTLAB_BUNDLE_14: ${{ needs.produce_msvc_x64_n64.outputs.bundle_14 }}
+            SNAPSHOTLAB_BUNDLE_15: ${{ needs.produce_msvc_x64_n64.outputs.bundle_15 }}
+            SNAPSHOTLAB_BUNDLE_16: ${{ needs.produce_msvc_x64_n64.outputs.bundle_16 }}
+            SNAPSHOTLAB_BUNDLE_17: ${{ needs.produce_msvc_x64_n64.outputs.bundle_17 }}
+            SNAPSHOTLAB_BUNDLE_18: ${{ needs.produce_msvc_x64_n64.outputs.bundle_18 }}
+            SNAPSHOTLAB_BUNDLE_19: ${{ needs.produce_msvc_x64_n64.outputs.bundle_19 }}
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "snapshotlab_ci.py", "receive", "--source-profile", "windows-msvc-x64", "--bodies", "64"], check=True)
+        - name: Receive bundle from macos-clang-arm64
+          id: receive_macos_arm64
+          if: ${{ !cancelled() && github.event.repository.visibility == 'public' && (inputs.mode == 'full') && needs.produce_macos_arm64_n64.result == 'success' }}
+          env:
+            SNAPSHOTLAB_BUNDLE_META: ${{ needs.produce_macos_arm64_n64.outputs.bundle_meta }}
+            SNAPSHOTLAB_BUNDLE_COUNT: ${{ needs.produce_macos_arm64_n64.outputs.bundle_count }}
+            SNAPSHOTLAB_BUNDLE_00: ${{ needs.produce_macos_arm64_n64.outputs.bundle_00 }}
+            SNAPSHOTLAB_BUNDLE_01: ${{ needs.produce_macos_arm64_n64.outputs.bundle_01 }}
+            SNAPSHOTLAB_BUNDLE_02: ${{ needs.produce_macos_arm64_n64.outputs.bundle_02 }}
+            SNAPSHOTLAB_BUNDLE_03: ${{ needs.produce_macos_arm64_n64.outputs.bundle_03 }}
+            SNAPSHOTLAB_BUNDLE_04: ${{ needs.produce_macos_arm64_n64.outputs.bundle_04 }}
+            SNAPSHOTLAB_BUNDLE_05: ${{ needs.produce_macos_arm64_n64.outputs.bundle_05 }}
+            SNAPSHOTLAB_BUNDLE_06: ${{ needs.produce_macos_arm64_n64.outputs.bundle_06 }}
+            SNAPSHOTLAB_BUNDLE_07: ${{ needs.produce_macos_arm64_n64.outputs.bundle_07 }}
+            SNAPSHOTLAB_BUNDLE_08: ${{ needs.produce_macos_arm64_n64.outputs.bundle_08 }}
+            SNAPSHOTLAB_BUNDLE_09: ${{ needs.produce_macos_arm64_n64.outputs.bundle_09 }}
+            SNAPSHOTLAB_BUNDLE_10: ${{ needs.produce_macos_arm64_n64.outputs.bundle_10 }}
+            SNAPSHOTLAB_BUNDLE_11: ${{ needs.produce_macos_arm64_n64.outputs.bundle_11 }}
+            SNAPSHOTLAB_BUNDLE_12: ${{ needs.produce_macos_arm64_n64.outputs.bundle_12 }}
+            SNAPSHOTLAB_BUNDLE_13: ${{ needs.produce_macos_arm64_n64.outputs.bundle_13 }}
+            SNAPSHOTLAB_BUNDLE_14: ${{ needs.produce_macos_arm64_n64.outputs.bundle_14 }}
+            SNAPSHOTLAB_BUNDLE_15: ${{ needs.produce_macos_arm64_n64.outputs.bundle_15 }}
+            SNAPSHOTLAB_BUNDLE_16: ${{ needs.produce_macos_arm64_n64.outputs.bundle_16 }}
+            SNAPSHOTLAB_BUNDLE_17: ${{ needs.produce_macos_arm64_n64.outputs.bundle_17 }}
+            SNAPSHOTLAB_BUNDLE_18: ${{ needs.produce_macos_arm64_n64.outputs.bundle_18 }}
+            SNAPSHOTLAB_BUNDLE_19: ${{ needs.produce_macos_arm64_n64.outputs.bundle_19 }}
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "snapshotlab_ci.py", "receive", "--source-profile", "macos-clang-arm64", "--bodies", "64"], check=True)
+        - name: Consume every available source case
+          if: ${{ !cancelled() && github.event.repository.visibility == 'public' && (inputs.mode == 'full' || inputs.mode == 'smoke') }}
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "snapshotlab_ci.py", "consume", "--profile", "macos-clang-arm64", "--compiler", "clang", "--config", "RelWithDebInfo", "--simd", "4", "--workers", "1", "--bodies", "64", "--mode", "${{ inputs.mode }}", "--parallel", "2", "--timeout", "900"], check=True)
+  consume_macos_arm64_n256:
+    needs: [produce_gcc_x64_n256, produce_clang_arm64_n256, produce_msvc_x64_n256, produce_macos_arm64_n256]
+    if: ${{ always() && !cancelled() && github.event.repository.visibility == 'public' && (inputs.mode == 'full' || (inputs.mode == 'smoke' && (false))) }}
+    name: Consume / macos-clang-arm64 / 256 bodies
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+        - name: Checkout harness sources
+          uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+          with:
+            fetch-depth: 1
+            persist-credentials: false
+        - name: Checkout pinned upstream source
+          uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+          with:
+            repository: erincatto/box3d
+            ref: 5d83df83ab47172c2c745b44315e7538ead02397
+            path: upstream
+            fetch-depth: 1
+            persist-credentials: false
+        - name: Verify pinned public source and runner
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "ci.py", "inventory", "--expected-arch", "arm64"], check=True)
+        - name: Receive bundle from linux-gcc-x64
+          id: receive_gcc_x64
+          if: ${{ !cancelled() && github.event.repository.visibility == 'public' && (true) && needs.produce_gcc_x64_n256.result == 'success' }}
+          env:
+            SNAPSHOTLAB_BUNDLE_META: ${{ needs.produce_gcc_x64_n256.outputs.bundle_meta }}
+            SNAPSHOTLAB_BUNDLE_COUNT: ${{ needs.produce_gcc_x64_n256.outputs.bundle_count }}
+            SNAPSHOTLAB_BUNDLE_00: ${{ needs.produce_gcc_x64_n256.outputs.bundle_00 }}
+            SNAPSHOTLAB_BUNDLE_01: ${{ needs.produce_gcc_x64_n256.outputs.bundle_01 }}
+            SNAPSHOTLAB_BUNDLE_02: ${{ needs.produce_gcc_x64_n256.outputs.bundle_02 }}
+            SNAPSHOTLAB_BUNDLE_03: ${{ needs.produce_gcc_x64_n256.outputs.bundle_03 }}
+            SNAPSHOTLAB_BUNDLE_04: ${{ needs.produce_gcc_x64_n256.outputs.bundle_04 }}
+            SNAPSHOTLAB_BUNDLE_05: ${{ needs.produce_gcc_x64_n256.outputs.bundle_05 }}
+            SNAPSHOTLAB_BUNDLE_06: ${{ needs.produce_gcc_x64_n256.outputs.bundle_06 }}
+            SNAPSHOTLAB_BUNDLE_07: ${{ needs.produce_gcc_x64_n256.outputs.bundle_07 }}
+            SNAPSHOTLAB_BUNDLE_08: ${{ needs.produce_gcc_x64_n256.outputs.bundle_08 }}
+            SNAPSHOTLAB_BUNDLE_09: ${{ needs.produce_gcc_x64_n256.outputs.bundle_09 }}
+            SNAPSHOTLAB_BUNDLE_10: ${{ needs.produce_gcc_x64_n256.outputs.bundle_10 }}
+            SNAPSHOTLAB_BUNDLE_11: ${{ needs.produce_gcc_x64_n256.outputs.bundle_11 }}
+            SNAPSHOTLAB_BUNDLE_12: ${{ needs.produce_gcc_x64_n256.outputs.bundle_12 }}
+            SNAPSHOTLAB_BUNDLE_13: ${{ needs.produce_gcc_x64_n256.outputs.bundle_13 }}
+            SNAPSHOTLAB_BUNDLE_14: ${{ needs.produce_gcc_x64_n256.outputs.bundle_14 }}
+            SNAPSHOTLAB_BUNDLE_15: ${{ needs.produce_gcc_x64_n256.outputs.bundle_15 }}
+            SNAPSHOTLAB_BUNDLE_16: ${{ needs.produce_gcc_x64_n256.outputs.bundle_16 }}
+            SNAPSHOTLAB_BUNDLE_17: ${{ needs.produce_gcc_x64_n256.outputs.bundle_17 }}
+            SNAPSHOTLAB_BUNDLE_18: ${{ needs.produce_gcc_x64_n256.outputs.bundle_18 }}
+            SNAPSHOTLAB_BUNDLE_19: ${{ needs.produce_gcc_x64_n256.outputs.bundle_19 }}
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "snapshotlab_ci.py", "receive", "--source-profile", "linux-gcc-x64", "--bodies", "256"], check=True)
+        - name: Receive bundle from linux-clang-arm64
+          id: receive_clang_arm64
+          if: ${{ !cancelled() && github.event.repository.visibility == 'public' && (true) && needs.produce_clang_arm64_n256.result == 'success' }}
+          env:
+            SNAPSHOTLAB_BUNDLE_META: ${{ needs.produce_clang_arm64_n256.outputs.bundle_meta }}
+            SNAPSHOTLAB_BUNDLE_COUNT: ${{ needs.produce_clang_arm64_n256.outputs.bundle_count }}
+            SNAPSHOTLAB_BUNDLE_00: ${{ needs.produce_clang_arm64_n256.outputs.bundle_00 }}
+            SNAPSHOTLAB_BUNDLE_01: ${{ needs.produce_clang_arm64_n256.outputs.bundle_01 }}
+            SNAPSHOTLAB_BUNDLE_02: ${{ needs.produce_clang_arm64_n256.outputs.bundle_02 }}
+            SNAPSHOTLAB_BUNDLE_03: ${{ needs.produce_clang_arm64_n256.outputs.bundle_03 }}
+            SNAPSHOTLAB_BUNDLE_04: ${{ needs.produce_clang_arm64_n256.outputs.bundle_04 }}
+            SNAPSHOTLAB_BUNDLE_05: ${{ needs.produce_clang_arm64_n256.outputs.bundle_05 }}
+            SNAPSHOTLAB_BUNDLE_06: ${{ needs.produce_clang_arm64_n256.outputs.bundle_06 }}
+            SNAPSHOTLAB_BUNDLE_07: ${{ needs.produce_clang_arm64_n256.outputs.bundle_07 }}
+            SNAPSHOTLAB_BUNDLE_08: ${{ needs.produce_clang_arm64_n256.outputs.bundle_08 }}
+            SNAPSHOTLAB_BUNDLE_09: ${{ needs.produce_clang_arm64_n256.outputs.bundle_09 }}
+            SNAPSHOTLAB_BUNDLE_10: ${{ needs.produce_clang_arm64_n256.outputs.bundle_10 }}
+            SNAPSHOTLAB_BUNDLE_11: ${{ needs.produce_clang_arm64_n256.outputs.bundle_11 }}
+            SNAPSHOTLAB_BUNDLE_12: ${{ needs.produce_clang_arm64_n256.outputs.bundle_12 }}
+            SNAPSHOTLAB_BUNDLE_13: ${{ needs.produce_clang_arm64_n256.outputs.bundle_13 }}
+            SNAPSHOTLAB_BUNDLE_14: ${{ needs.produce_clang_arm64_n256.outputs.bundle_14 }}
+            SNAPSHOTLAB_BUNDLE_15: ${{ needs.produce_clang_arm64_n256.outputs.bundle_15 }}
+            SNAPSHOTLAB_BUNDLE_16: ${{ needs.produce_clang_arm64_n256.outputs.bundle_16 }}
+            SNAPSHOTLAB_BUNDLE_17: ${{ needs.produce_clang_arm64_n256.outputs.bundle_17 }}
+            SNAPSHOTLAB_BUNDLE_18: ${{ needs.produce_clang_arm64_n256.outputs.bundle_18 }}
+            SNAPSHOTLAB_BUNDLE_19: ${{ needs.produce_clang_arm64_n256.outputs.bundle_19 }}
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "snapshotlab_ci.py", "receive", "--source-profile", "linux-clang-arm64", "--bodies", "256"], check=True)
+        - name: Receive bundle from windows-msvc-x64
+          id: receive_msvc_x64
+          if: ${{ !cancelled() && github.event.repository.visibility == 'public' && (inputs.mode == 'full') && needs.produce_msvc_x64_n256.result == 'success' }}
+          env:
+            SNAPSHOTLAB_BUNDLE_META: ${{ needs.produce_msvc_x64_n256.outputs.bundle_meta }}
+            SNAPSHOTLAB_BUNDLE_COUNT: ${{ needs.produce_msvc_x64_n256.outputs.bundle_count }}
+            SNAPSHOTLAB_BUNDLE_00: ${{ needs.produce_msvc_x64_n256.outputs.bundle_00 }}
+            SNAPSHOTLAB_BUNDLE_01: ${{ needs.produce_msvc_x64_n256.outputs.bundle_01 }}
+            SNAPSHOTLAB_BUNDLE_02: ${{ needs.produce_msvc_x64_n256.outputs.bundle_02 }}
+            SNAPSHOTLAB_BUNDLE_03: ${{ needs.produce_msvc_x64_n256.outputs.bundle_03 }}
+            SNAPSHOTLAB_BUNDLE_04: ${{ needs.produce_msvc_x64_n256.outputs.bundle_04 }}
+            SNAPSHOTLAB_BUNDLE_05: ${{ needs.produce_msvc_x64_n256.outputs.bundle_05 }}
+            SNAPSHOTLAB_BUNDLE_06: ${{ needs.produce_msvc_x64_n256.outputs.bundle_06 }}
+            SNAPSHOTLAB_BUNDLE_07: ${{ needs.produce_msvc_x64_n256.outputs.bundle_07 }}
+            SNAPSHOTLAB_BUNDLE_08: ${{ needs.produce_msvc_x64_n256.outputs.bundle_08 }}
+            SNAPSHOTLAB_BUNDLE_09: ${{ needs.produce_msvc_x64_n256.outputs.bundle_09 }}
+            SNAPSHOTLAB_BUNDLE_10: ${{ needs.produce_msvc_x64_n256.outputs.bundle_10 }}
+            SNAPSHOTLAB_BUNDLE_11: ${{ needs.produce_msvc_x64_n256.outputs.bundle_11 }}
+            SNAPSHOTLAB_BUNDLE_12: ${{ needs.produce_msvc_x64_n256.outputs.bundle_12 }}
+            SNAPSHOTLAB_BUNDLE_13: ${{ needs.produce_msvc_x64_n256.outputs.bundle_13 }}
+            SNAPSHOTLAB_BUNDLE_14: ${{ needs.produce_msvc_x64_n256.outputs.bundle_14 }}
+            SNAPSHOTLAB_BUNDLE_15: ${{ needs.produce_msvc_x64_n256.outputs.bundle_15 }}
+            SNAPSHOTLAB_BUNDLE_16: ${{ needs.produce_msvc_x64_n256.outputs.bundle_16 }}
+            SNAPSHOTLAB_BUNDLE_17: ${{ needs.produce_msvc_x64_n256.outputs.bundle_17 }}
+            SNAPSHOTLAB_BUNDLE_18: ${{ needs.produce_msvc_x64_n256.outputs.bundle_18 }}
+            SNAPSHOTLAB_BUNDLE_19: ${{ needs.produce_msvc_x64_n256.outputs.bundle_19 }}
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "snapshotlab_ci.py", "receive", "--source-profile", "windows-msvc-x64", "--bodies", "256"], check=True)
+        - name: Receive bundle from macos-clang-arm64
+          id: receive_macos_arm64
+          if: ${{ !cancelled() && github.event.repository.visibility == 'public' && (inputs.mode == 'full') && needs.produce_macos_arm64_n256.result == 'success' }}
+          env:
+            SNAPSHOTLAB_BUNDLE_META: ${{ needs.produce_macos_arm64_n256.outputs.bundle_meta }}
+            SNAPSHOTLAB_BUNDLE_COUNT: ${{ needs.produce_macos_arm64_n256.outputs.bundle_count }}
+            SNAPSHOTLAB_BUNDLE_00: ${{ needs.produce_macos_arm64_n256.outputs.bundle_00 }}
+            SNAPSHOTLAB_BUNDLE_01: ${{ needs.produce_macos_arm64_n256.outputs.bundle_01 }}
+            SNAPSHOTLAB_BUNDLE_02: ${{ needs.produce_macos_arm64_n256.outputs.bundle_02 }}
+            SNAPSHOTLAB_BUNDLE_03: ${{ needs.produce_macos_arm64_n256.outputs.bundle_03 }}
+            SNAPSHOTLAB_BUNDLE_04: ${{ needs.produce_macos_arm64_n256.outputs.bundle_04 }}
+            SNAPSHOTLAB_BUNDLE_05: ${{ needs.produce_macos_arm64_n256.outputs.bundle_05 }}
+            SNAPSHOTLAB_BUNDLE_06: ${{ needs.produce_macos_arm64_n256.outputs.bundle_06 }}
+            SNAPSHOTLAB_BUNDLE_07: ${{ needs.produce_macos_arm64_n256.outputs.bundle_07 }}
+            SNAPSHOTLAB_BUNDLE_08: ${{ needs.produce_macos_arm64_n256.outputs.bundle_08 }}
+            SNAPSHOTLAB_BUNDLE_09: ${{ needs.produce_macos_arm64_n256.outputs.bundle_09 }}
+            SNAPSHOTLAB_BUNDLE_10: ${{ needs.produce_macos_arm64_n256.outputs.bundle_10 }}
+            SNAPSHOTLAB_BUNDLE_11: ${{ needs.produce_macos_arm64_n256.outputs.bundle_11 }}
+            SNAPSHOTLAB_BUNDLE_12: ${{ needs.produce_macos_arm64_n256.outputs.bundle_12 }}
+            SNAPSHOTLAB_BUNDLE_13: ${{ needs.produce_macos_arm64_n256.outputs.bundle_13 }}
+            SNAPSHOTLAB_BUNDLE_14: ${{ needs.produce_macos_arm64_n256.outputs.bundle_14 }}
+            SNAPSHOTLAB_BUNDLE_15: ${{ needs.produce_macos_arm64_n256.outputs.bundle_15 }}
+            SNAPSHOTLAB_BUNDLE_16: ${{ needs.produce_macos_arm64_n256.outputs.bundle_16 }}
+            SNAPSHOTLAB_BUNDLE_17: ${{ needs.produce_macos_arm64_n256.outputs.bundle_17 }}
+            SNAPSHOTLAB_BUNDLE_18: ${{ needs.produce_macos_arm64_n256.outputs.bundle_18 }}
+            SNAPSHOTLAB_BUNDLE_19: ${{ needs.produce_macos_arm64_n256.outputs.bundle_19 }}
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "snapshotlab_ci.py", "receive", "--source-profile", "macos-clang-arm64", "--bodies", "256"], check=True)
+        - name: Consume every available source case
+          if: ${{ !cancelled() && github.event.repository.visibility == 'public' && (inputs.mode == 'full' || inputs.mode == 'smoke') }}
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "snapshotlab_ci.py", "consume", "--profile", "macos-clang-arm64", "--compiler", "clang", "--config", "RelWithDebInfo", "--simd", "4", "--workers", "1", "--bodies", "256", "--mode", "${{ inputs.mode }}", "--parallel", "2", "--timeout", "900"], check=True)
+  cost_gcc_x64:
+    if: ${{ github.event.repository.visibility == 'public' && (inputs.mode == 'full' || (true)) }}
+    name: Raw cost measurements / linux-gcc-x64
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+        - name: Checkout harness sources
+          uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+          with:
+            fetch-depth: 1
+            persist-credentials: false
+        - name: Checkout pinned upstream source
+          uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+          with:
+            repository: erincatto/box3d
+            ref: 5d83df83ab47172c2c745b44315e7538ead02397
+            path: upstream
+            fetch-depth: 1
+            persist-credentials: false
+        - name: Verify pinned public source and runner
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "ci.py", "inventory", "--expected-arch", "x86_64"], check=True)
+        - name: Measure the fixed public cost workload
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "snapshotlab_ci.py", "cost", "--profile", "linux-gcc-x64", "--compiler", "gcc", "--config", "RelWithDebInfo", "--simd", "4", "--workers", "1", "--parallel", "2", "--timeout", "1200"], check=True)
+  cost_clang_arm64:
+    if: ${{ github.event.repository.visibility == 'public' && (inputs.mode == 'full' || (true)) }}
+    name: Raw cost measurements / linux-clang-arm64
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 45
+    steps:
+        - name: Checkout harness sources
+          uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+          with:
+            fetch-depth: 1
+            persist-credentials: false
+        - name: Checkout pinned upstream source
+          uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+          with:
+            repository: erincatto/box3d
+            ref: 5d83df83ab47172c2c745b44315e7538ead02397
+            path: upstream
+            fetch-depth: 1
+            persist-credentials: false
+        - name: Verify pinned public source and runner
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "ci.py", "inventory", "--expected-arch", "arm64"], check=True)
+        - name: Measure the fixed public cost workload
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "snapshotlab_ci.py", "cost", "--profile", "linux-clang-arm64", "--compiler", "clang", "--config", "RelWithDebInfo", "--simd", "4", "--workers", "1", "--parallel", "2", "--timeout", "1200"], check=True)
+  cost_msvc_x64:
+    if: ${{ github.event.repository.visibility == 'public' && (inputs.mode == 'full' || (inputs.mode == 'full')) }}
+    name: Raw cost measurements / windows-msvc-x64
+    runs-on: windows-2022
+    timeout-minutes: 45
+    steps:
+        - name: Checkout harness sources
+          uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+          with:
+            fetch-depth: 1
+            persist-credentials: false
+        - name: Checkout pinned upstream source
+          uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+          with:
+            repository: erincatto/box3d
+            ref: 5d83df83ab47172c2c745b44315e7538ead02397
+            path: upstream
+            fetch-depth: 1
+            persist-credentials: false
+        - name: Verify pinned public source and runner
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "ci.py", "inventory", "--expected-arch", "x86_64"], check=True)
+        - name: Measure the fixed public cost workload
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "snapshotlab_ci.py", "cost", "--profile", "windows-msvc-x64", "--compiler", "msvc", "--config", "RelWithDebInfo", "--simd", "4", "--workers", "1", "--parallel", "2", "--timeout", "1200"], check=True)
+  cost_macos_arm64:
+    if: ${{ github.event.repository.visibility == 'public' && (inputs.mode == 'full' || (inputs.mode == 'full')) }}
+    name: Raw cost measurements / macos-clang-arm64
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+        - name: Checkout harness sources
+          uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+          with:
+            fetch-depth: 1
+            persist-credentials: false
+        - name: Checkout pinned upstream source
+          uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+          with:
+            repository: erincatto/box3d
+            ref: 5d83df83ab47172c2c745b44315e7538ead02397
+            path: upstream
+            fetch-depth: 1
+            persist-credentials: false
+        - name: Verify pinned public source and runner
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "ci.py", "inventory", "--expected-arch", "arm64"], check=True)
+        - name: Measure the fixed public cost workload
+          shell: python
+          run: |
+            import subprocess
+            subprocess.run(["python", "-B", "snapshotlab_ci.py", "cost", "--profile", "macos-clang-arm64", "--compiler", "clang", "--config", "RelWithDebInfo", "--simd", "4", "--workers", "1", "--parallel", "2", "--timeout", "1200"], check=True)
+  final-gate:
+    needs: [produce_gcc_x64_n64, produce_gcc_x64_n256, produce_clang_arm64_n64, produce_clang_arm64_n256, produce_msvc_x64_n64, produce_msvc_x64_n256, produce_macos_arm64_n64, produce_macos_arm64_n256, consume_gcc_x64_n64, consume_gcc_x64_n256, consume_clang_arm64_n64, consume_clang_arm64_n256, consume_msvc_x64_n64, consume_msvc_x64_n256, consume_macos_arm64_n64, consume_macos_arm64_n256, cost_gcc_x64, cost_clang_arm64, cost_msvc_x64, cost_macos_arm64]
+    if: ${{ always() && !cancelled() && github.event.repository.visibility == 'public' }}
+    name: Check active execution jobs
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Require every active run to complete
+        shell: python
+        env:
+          MODE: ${{ inputs.mode }}
+          ST_PRODUCE_GCC_X64_N64: ${{ needs.produce_gcc_x64_n64.result }}
+          ST_PRODUCE_GCC_X64_N256: ${{ needs.produce_gcc_x64_n256.result }}
+          ST_PRODUCE_CLANG_ARM64_N64: ${{ needs.produce_clang_arm64_n64.result }}
+          ST_PRODUCE_CLANG_ARM64_N256: ${{ needs.produce_clang_arm64_n256.result }}
+          ST_PRODUCE_MSVC_X64_N64: ${{ needs.produce_msvc_x64_n64.result }}
+          ST_PRODUCE_MSVC_X64_N256: ${{ needs.produce_msvc_x64_n256.result }}
+          ST_PRODUCE_MACOS_ARM64_N64: ${{ needs.produce_macos_arm64_n64.result }}
+          ST_PRODUCE_MACOS_ARM64_N256: ${{ needs.produce_macos_arm64_n256.result }}
+          ST_CONSUME_GCC_X64_N64: ${{ needs.consume_gcc_x64_n64.result }}
+          ST_CONSUME_GCC_X64_N256: ${{ needs.consume_gcc_x64_n256.result }}
+          ST_CONSUME_CLANG_ARM64_N64: ${{ needs.consume_clang_arm64_n64.result }}
+          ST_CONSUME_CLANG_ARM64_N256: ${{ needs.consume_clang_arm64_n256.result }}
+          ST_CONSUME_MSVC_X64_N64: ${{ needs.consume_msvc_x64_n64.result }}
+          ST_CONSUME_MSVC_X64_N256: ${{ needs.consume_msvc_x64_n256.result }}
+          ST_CONSUME_MACOS_ARM64_N64: ${{ needs.consume_macos_arm64_n64.result }}
+          ST_CONSUME_MACOS_ARM64_N256: ${{ needs.consume_macos_arm64_n256.result }}
+          ST_COST_GCC_X64: ${{ needs.cost_gcc_x64.result }}
+          ST_COST_CLANG_ARM64: ${{ needs.cost_clang_arm64.result }}
+          ST_COST_MSVC_X64: ${{ needs.cost_msvc_x64.result }}
+          ST_COST_MACOS_ARM64: ${{ needs.cost_macos_arm64.result }}
+        run: |
+            import os, sys
+            mode = os.environ['MODE']
+            active = ['gcc_x64', 'clang_arm64'] if mode == 'smoke' else ['gcc_x64', 'clang_arm64', 'msvc_x64', 'macos_arm64']
+            required = []
+            for origin in active:
+                required.append('COST_' + origin.upper())
+                for bodies in (64, 256):
+                    required.extend(('PRODUCE_' + origin.upper() + '_N' + str(bodies), 'CONSUME_' + origin.upper() + '_N' + str(bodies)))
+            failed = {key: os.environ.get('ST_' + key, 'missing') for key in required if os.environ.get('ST_' + key) != 'success'}
+            print({'mode': mode, 'required_jobs': len(required), 'failed_jobs': failed})
+            sys.exit(1 if failed else 0)
